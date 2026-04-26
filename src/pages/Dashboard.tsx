@@ -6,7 +6,7 @@ import { useFY } from "@/context/fiscal-year";
 import { getYear, formatNGN as formatNGNCa, formatNGN, totalAA, totalPoolCost, totalTwdvCf, taxComputation, YEARS } from "@/lib/ca-data";
 import { KpiCard } from "@/components/ca/KpiCard";
 import { StatusBadge } from "@/components/ca/StatusBadge";
-import { ArrowRight, Building2, Calculator, ChevronDown, TrendingUp, TrendingDown, Users, Receipt, ShieldCheck, AlertTriangle, Lock as LockIcon } from "lucide-react";
+import { ArrowRight, Building2, Calculator, ChevronDown, TrendingUp, Users, Receipt, ShieldCheck, AlertTriangle, Lock as LockIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend,
