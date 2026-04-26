@@ -12,6 +12,11 @@ import Classifications from "./pages/ca/Classifications";
 import History from "./pages/ca/History";
 import TaxComputation from "./pages/TaxComputation";
 import Placeholder from "./pages/Placeholder";
+import PayrollRuns from "./pages/paye/PayrollRuns";
+import PayrollRunDetail from "./pages/paye/PayrollRunDetail";
+import PayeEmployees from "./pages/paye/Employees";
+import PayeRemittance from "./pages/paye/Remittance";
+import PayeTaxBands from "./pages/paye/TaxBands";
 
 const queryClient = new QueryClient();
 
@@ -34,7 +39,11 @@ const App = () => (
             <Route path="/taxation/capital-allowance/classifications" element={<Classifications />} />
             <Route path="/taxation/capital-allowance/history" element={<History />} />
             <Route path="/taxation/tax-computation" element={<TaxComputation />} />
-            <Route path="/taxation/paye" element={<Placeholder title="PAYE" breadcrumbs={["Taxation", "PAYE"]} />} />
+            <Route path="/taxation/paye" element={<PayrollRuns />} />
+            <Route path="/taxation/paye/runs/:runKey" element={<PayrollRunDetail />} />
+            <Route path="/taxation/paye/employees" element={<PayeEmployees />} />
+            <Route path="/taxation/paye/remittance" element={<PayeRemittance />} />
+            <Route path="/taxation/paye/bands" element={<PayeTaxBands />} />
             <Route path="/taxation/vat" element={<Placeholder title="VAT" breadcrumbs={["Taxation", "VAT"]} />} />
             <Route path="/taxation/wht" element={<Placeholder title="WHT" breadcrumbs={["Taxation", "WHT"]} />} />
             <Route path="/reports" element={<Placeholder title="Reports" breadcrumbs={["Reports"]} />} />
