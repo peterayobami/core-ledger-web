@@ -98,8 +98,8 @@
     font-feature-settings: "cv11", "ss01";
   }
   .font-mono, .mono {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    font-feature-settings: "tnum", "ss01";
+    font-family: 'League Spartan', system-ui, -apple-system, sans-serif;
+    font-feature-settings: "tnum";
   }
 }
 

@@ -13,7 +13,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ["League Spartan", "system-ui", "sans-serif"],
-        mono: ["JetBrains Mono", "ui-monospace", "monospace"],
+        mono: ["League Spartan", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
