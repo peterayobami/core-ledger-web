@@ -2,10 +2,10 @@ import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { label: "Payroll Runs", to: "/taxation/paye" },
-  { label: "Employees", to: "/taxation/paye/employees" },
+  { label: "Employee Setup", to: "/taxation/paye/employees" },
+  { label: "Payroll Run", to: "/taxation/paye" },
   { label: "Remittance", to: "/taxation/paye/remittance" },
-  { label: "Tax Bands", to: "/taxation/paye/bands" },
+  { label: "Employee Portal", to: "/taxation/paye/portal" },
 ];
 
 export function PAYETabs() {
@@ -14,7 +14,9 @@ export function PAYETabs() {
     <div className="border-b border-border bg-card">
       <div className="px-6 flex items-center gap-1 overflow-x-auto">
         {tabs.map((t) => {
-          const active = pathname === t.to || (t.to === "/taxation/paye" && pathname.startsWith("/taxation/paye/runs/"));
+          const active =
+            pathname === t.to ||
+            (t.to === "/taxation/paye" && pathname.startsWith("/taxation/paye/runs/"));
           return (
             <NavLink
               key={t.to}
