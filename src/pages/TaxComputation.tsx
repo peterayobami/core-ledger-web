@@ -60,7 +60,7 @@ function PrerequisiteWarning({ fiscalYear }: { fiscalYear: number }) {
   );
 }
 
-function ComputationView({ year, preview }: { year: ReturnType<typeof getYear> & {}; preview?: boolean }) {
+function ComputationView({ year, preview }: { year: NonNullable<ReturnType<typeof caRepository.getByFiscalYear>>; preview?: boolean }) {
   const t = taxComputation(year);
   const aa = totalAA(year);
 
