@@ -17,6 +17,12 @@ import PayeEmployees from "./pages/paye/Employees";
 import PayeRemittance from "./pages/paye/Remittance";
 import PayeTaxBands from "./pages/paye/TaxBands";
 import PayePortal from "./pages/paye/Portal";
+import VendorsPage from "./pages/contacts/Vendors";
+import VendorDetailPage from "./pages/contacts/VendorDetail";
+import CustomersPage from "./pages/contacts/Customers";
+import CustomerDetailPage from "./pages/contacts/CustomerDetail";
+import EmployeesPage from "./pages/contacts/Employees";
+import EmployeeDetailPage from "./pages/contacts/EmployeeDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 60_000 } },
@@ -30,9 +36,29 @@ const App = () => (
       <BrowserRouter>
         <Routes>
             <Route path="/" element={<Dashboard />} />
+
+            {/* Contacts */}
+            <Route path="/contacts/vendors" element={<VendorsPage />} />
+            <Route path="/contacts/vendors/:id" element={<VendorDetailPage />} />
+            <Route path="/contacts/customers" element={<CustomersPage />} />
+            <Route path="/contacts/customers/:id" element={<CustomerDetailPage />} />
+            <Route path="/contacts/employees" element={<EmployeesPage />} />
+            <Route path="/contacts/employees/:id" element={<EmployeeDetailPage />} />
+
+            {/* Reports */}
+            <Route path="/reports/profit-and-loss" element={<Placeholder title="Profit and Loss" breadcrumbs={["Reports", "Profit and Loss"]} />} />
+            <Route path="/reports/balance-sheet" element={<Placeholder title="Balance Sheet" breadcrumbs={["Reports", "Balance Sheet"]} />} />
+            <Route path="/reports/cash-flow" element={<Placeholder title="Cash Flow" breadcrumbs={["Reports", "Cash Flow"]} />} />
+            <Route path="/reports/trial-balance" element={<Placeholder title="Trial Balance" breadcrumbs={["Reports", "Trial Balance"]} />} />
+
+            {/* Books */}
+            <Route path="/books/charts-of-accounts" element={<Placeholder title="Charts of Accounts" breadcrumbs={["Books", "Charts of Accounts"]} />} />
+            <Route path="/books/journals" element={<Placeholder title="Journals" breadcrumbs={["Books", "Journals"]} />} />
+
             <Route path="/transactions/revenue" element={<Placeholder title="Revenue" breadcrumbs={["Transactions", "Revenue"]} />} />
             <Route path="/transactions/purchases" element={<Placeholder title="Purchases" breadcrumbs={["Transactions", "Purchases"]} />} />
             <Route path="/transactions/expenses" element={<Placeholder title="Expenses" breadcrumbs={["Transactions", "Expenses"]} />} />
+            <Route path="/transactions/assets" element={<Placeholder title="Assets" breadcrumbs={["Transactions", "Assets"]} />} />
             <Route path="/assets/register" element={<Placeholder title="Asset Register" breadcrumbs={["Assets", "Asset Register"]} />} />
             <Route path="/assets/classifications" element={<Classifications />} />
             <Route path="/taxation/capital-allowance" element={<Overview />} />
