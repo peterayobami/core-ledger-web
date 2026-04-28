@@ -13,7 +13,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ["Open Sans", "system-ui", "sans-serif"],
-        mono: ["Open Sans", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "ui-monospace", "monospace"],
       },
       colors: {
         border: "hsl(var(--border))",

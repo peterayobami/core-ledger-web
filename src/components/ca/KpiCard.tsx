@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { ArrowDown, ArrowUp } from "lucide-react";
-import { formatNGN } from "@/lib/ca-data";
+import { formatNGN } from "@/lib/services/ca.service";
 
 export function KpiCard({
   label, value, sublabel, trend, progress, footer,

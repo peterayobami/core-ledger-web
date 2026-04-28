@@ -1,11 +1,12 @@
 import { CALayout } from "@/components/ca/CALayout";
 import { StatusBadge } from "@/components/ca/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { useFY } from "@/context/fiscal-year";
+import { useFiscalYearStore } from "@/stores/fiscal-year.store";
+import { caRepository } from "@/lib/repositories/ca.repository";
 import {
-  CLASSIFICATIONS, getYear, formatNGN, formatPct, totalAA, totalAdditions,
-  totalPoolCost, totalTwdvBf, totalTwdvCf,
-} from "@/lib/ca-data";
+  CLASSIFICATIONS,
+} from "@/lib/mock-data/ca";
+import { formatNGN, formatPct, totalAA, totalAdditions, totalPoolCost, totalTwdvBf, totalTwdvCf } from "@/lib/services/ca.service";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { HelpCircle, FileText, FileSpreadsheet, Lock, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -36,8 +37,8 @@ function HeaderTip({ label }: { label: string }) {
 }
 
 export default function SchedulePage() {
-  const { fiscalYear } = useFY();
-  const year = getYear(fiscalYear);
+  const { fiscalYear } = useFiscalYearStore();
+  const year = caRepository.getByFiscalYear(fiscalYear);
   if (!year) return <CALayout breadcrumbs={["Taxation", "Capital Allowance", "Schedule"]}>No data</CALayout>;
 
   const aaTotal = totalAA(year);

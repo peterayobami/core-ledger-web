@@ -1,6 +1,7 @@
 import { PAYELayout } from "@/components/paye/PAYELayout";
 import { BandChip } from "@/components/paye/RunStatusBadge";
-import { PAYE_BANDS, formatNGN } from "@/lib/paye-data";
+import { PAYE_BANDS } from "@/lib/mock-data/paye";
+import { formatNGN } from "@/lib/services/paye.service";
 import { Info } from "lucide-react";
 
 export default function TaxBands() {

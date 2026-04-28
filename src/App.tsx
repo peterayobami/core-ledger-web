@@ -4,7 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "./pages/NotFound.tsx";
-import { FYProvider } from "@/context/fiscal-year";
 import Dashboard from "./pages/Dashboard";
 import Overview from "./pages/ca/Overview";
 import Schedule from "./pages/ca/Schedule";
@@ -19,16 +18,17 @@ import PayeRemittance from "./pages/paye/Remittance";
 import PayeTaxBands from "./pages/paye/TaxBands";
 import PayePortal from "./pages/paye/Portal";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: 1, staleTime: 60_000 } },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <FYProvider>
-        <BrowserRouter>
-          <Routes>
+      <BrowserRouter>
+        <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/transactions/revenue" element={<Placeholder title="Revenue" breadcrumbs={["Transactions", "Revenue"]} />} />
             <Route path="/transactions/purchases" element={<Placeholder title="Purchases" breadcrumbs={["Transactions", "Purchases"]} />} />
@@ -51,9 +51,8 @@ const App = () => (
             <Route path="/reports" element={<Placeholder title="Reports" breadcrumbs={["Reports"]} />} />
             <Route path="/settings" element={<Placeholder title="Settings" breadcrumbs={["Settings"]} />} />
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </FYProvider>
+        </Routes>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );

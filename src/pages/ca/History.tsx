@@ -1,7 +1,8 @@
 import { CALayout } from "@/components/ca/CALayout";
 import { StatusBadge } from "@/components/ca/StatusBadge";
-import { YEARS, formatNGN, totalAA, totalPoolCost, totalTwdvCf, taxComputation } from "@/lib/ca-data";
-import { useFY } from "@/context/fiscal-year";
+import { YEARS } from "@/lib/mock-data/ca";
+import { formatNGN, totalAA, totalPoolCost, totalTwdvCf, taxComputation } from "@/lib/services/ca.service";
+import { useFiscalYearStore } from "@/stores/fiscal-year.store";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
   BarChart, Bar,
@@ -10,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { Eye, Calculator } from "lucide-react";
 
 export default function HistoryPage() {
-  const { setFiscalYear } = useFY();
+  const { setFiscalYear } = useFiscalYearStore();
 
   const trendData = YEARS.map((y) => ({
     fy: `FY ${y.fiscalYear}`,

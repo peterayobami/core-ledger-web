@@ -1,5 +1,5 @@
 import { CALayout } from "@/components/ca/CALayout";
-import { CLASSIFICATIONS } from "@/lib/ca-data";
+import { CLASSIFICATIONS } from "@/lib/mock-data/ca";
 import { Info, Building2, Sofa, Cog, Wheat, Mountain, Car, Bus, FlaskConical, Printer, Monitor, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
