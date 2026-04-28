@@ -9,9 +9,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  EMPLOYEES, computePaye, formatNGN, formatNGNCompact, formatPct, periodLong, CURRENT_PERIOD,
-  type Employee, type PayeProfile,
-} from "@/lib/paye-data";
+  EMPLOYEES, CURRENT_PERIOD, periodLong,
+} from "@/lib/mock-data/paye";
+import { computePaye, formatNGN, formatNGNCompact, formatPct } from "@/lib/services/paye.service";
+import type { Employee, PayeProfile } from "@/lib/models/paye";
 import {
   Search, ShieldCheck, Upload, RotateCcw, Save, ChevronRight, AlertCircle,
 } from "lucide-react";

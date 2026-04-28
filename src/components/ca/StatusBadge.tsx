@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { CAStatus } from "@/lib/ca-data";
+import type { CAStatus } from "@/lib/models/ca";
 import { Shield, Clock, CircleDashed, Lock } from "lucide-react";
 
 export function StatusBadge({ status, size = "sm" }: { status: CAStatus; size?: "sm" | "md" }) {

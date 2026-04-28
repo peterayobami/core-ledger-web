@@ -2,8 +2,14 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { useFY } from "@/context/fiscal-year";
-import { getYear, formatNGN as formatNGNCa, formatNGN, totalAA, totalPoolCost, totalTwdvCf, taxComputation, YEARS } from "@/lib/ca-data";
+import { useFiscalYearStore } from "@/stores/fiscal-year.store";
+import { caRepository } from "@/lib/repositories/ca.repository";
+import { payeRepository } from "@/lib/repositories/paye.repository";
+import { formatNGN, formatNGN as formatNGNCa, totalAA, totalPoolCost, totalTwdvCf, taxComputation } from "@/lib/services/ca.service";
+import { formatNGN as formatNGNPaye, formatNGNCompact, formatPct, bandColor, bandDistribution } from "@/lib/services/paye.service";
+import { YEARS } from "@/lib/mock-data/ca";
+import { RUNS, CURRENT_PERIOD, MONTH_LONG, EMPLOYEES, periodLong, periodShort, prevPeriod, addMonths } from "@/lib/mock-data/paye";
+import type { Period } from "@/lib/models/paye";
 import { KpiCard } from "@/components/ca/KpiCard";
 import { StatusBadge } from "@/components/ca/StatusBadge";
 import { ArrowRight, Building2, Calculator, ChevronDown, TrendingUp, Users, Receipt, ShieldCheck, AlertTriangle, Lock as LockIcon } from "lucide-react";
@@ -13,11 +19,6 @@ import {
   PieChart, Pie, Cell, LineChart, Line,
 } from "recharts";
 import { Button } from "@/components/ui/button";
-import {
-  RUNS, getRun, CURRENT_PERIOD, prevPeriod, periodLong, periodShort, formatNGN as formatNGNPaye,
-  formatNGNCompact, formatPct, bandColor, bandDistribution, MONTH_LONG, addMonths, getEmployee, EMPLOYEES,
-  type Period,
-} from "@/lib/paye-data";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -62,8 +63,8 @@ export default function Dashboard() {
 /* ---------------- Overview Tab ---------------- */
 
 function OverviewTab() {
-  const { fiscalYear } = useFY();
-  const year = getYear(fiscalYear)!;
+  const { fiscalYear } = useFiscalYearStore();
+  const year = caRepository.getByFiscalYear(fiscalYear)!;
   const t = year.status !== "not_computed" ? taxComputation(year) : null;
 
   // Fake monthly Revenue vs Expenses for last 6 months derived from year totals
@@ -173,8 +174,8 @@ function OverviewTab() {
 /* ---------------- CA Summary Tab ---------------- */
 
 function CATab() {
-  const { fiscalYear } = useFY();
-  const year = getYear(fiscalYear)!;
+  const { fiscalYear } = useFiscalYearStore();
+  const year = caRepository.getByFiscalYear(fiscalYear)!;
   const t = year.status !== "not_computed" ? taxComputation(year) : null;
 
   return (
@@ -225,8 +226,8 @@ function CATab() {
 
 function PayeAnalysisTab() {
   const [period, setPeriod] = useState<Period>(CURRENT_PERIOD);
-  const run = getRun(period);
-  const prior = getRun(prevPeriod(period));
+  const run = payeRepository.getRunByPeriod(period);
+  const prior = payeRepository.getRunByPeriod(prevPeriod(period));
 
   if (!run) {
     return (
@@ -456,7 +457,7 @@ function PayeAnalysisTab() {
             </thead>
             <tbody>
               {[...run.entries].sort((a, b) => b.monthlyPaye - a.monthlyPaye).slice(0, 5).map((e) => {
-                const emp = getEmployee(e.employeeId)!;
+                const emp = payeRepository.getEmployeeById(e.employeeId)!;
                 return (
                   <tr key={e.employeeId}>
                     <td className="px-4 py-2.5 font-medium">{emp.name}</td>
@@ -475,7 +476,7 @@ function PayeAnalysisTab() {
   );
 }
 
-function RemittanceStatusCard({ run, period }: { run: ReturnType<typeof getRun> & {}; period: Period }) {
+function RemittanceStatusCard({ run, period }: { run: ReturnType<typeof payeRepository.getRunByPeriod> & {}; period: Period }) {
   // Status logic
   const today = new Date(`${CURRENT_PERIOD.year}-${String(CURRENT_PERIOD.month).padStart(2, "0")}-15`);
   const next = addMonths(period, 1);
@@ -508,7 +509,7 @@ function RemittanceStatusCard({ run, period }: { run: ReturnType<typeof getRun> 
   );
 }
 
-function QuickActions({ run, period }: { run: ReturnType<typeof getRun> & {}; period: Period }) {
+function QuickActions({ run, period }: { run: ReturnType<typeof payeRepository.getRunByPeriod> & {}; period: Period }) {
   const { status } = run;
   return (
     <div className="data-card p-5 flex flex-col gap-3">

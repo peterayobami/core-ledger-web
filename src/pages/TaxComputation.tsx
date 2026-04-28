@@ -1,15 +1,16 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { useFY } from "@/context/fiscal-year";
-import { getYear, formatNGN, taxComputation, totalAA } from "@/lib/ca-data";
+import { useFiscalYearStore } from "@/stores/fiscal-year.store";
+import { caRepository } from "@/lib/repositories/ca.repository";
+import { formatNGN, taxComputation, totalAA } from "@/lib/services/ca.service";
 import { AlertTriangle, ArrowRight, Calculator, FileSpreadsheet, FileText, Info, Lock, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 export default function TaxComputation() {
-  const { fiscalYear } = useFY();
-  const year = getYear(fiscalYear);
+  const { fiscalYear } = useFiscalYearStore();
+  const year = caRepository.getByFiscalYear(fiscalYear);
 
   return (
     <AppShell>

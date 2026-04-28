@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Calculator, ShieldCheck, Lock, CircleDashed, AlertCircle, Clock } from "lucide-react";
-import type { PayeRunStatus, RemittanceStatus } from "@/lib/paye-data";
+import type { PayeRunStatus, RemittanceStatus } from "@/lib/models/paye";
 
 export function RunStatusBadge({ status, size = "sm" }: { status: PayeRunStatus; size?: "sm" | "md" }) {
   const cfg = {

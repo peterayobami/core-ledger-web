@@ -4,19 +4,20 @@ import { PAYELayout } from "@/components/paye/PAYELayout";
 import { BandChip, RunStatusBadge } from "@/components/paye/RunStatusBadge";
 import { Button } from "@/components/ui/button";
 import {
-  RUNS, CURRENT_PERIOD, getRun, periodLong, periodShort, periodKey,
-  formatNGN, formatNGNCompact, formatPct, validateForRun, prevPeriod, getEmployee,
-  EMPLOYEES,
-} from "@/lib/paye-data";
+  RUNS, CURRENT_PERIOD, periodLong, periodShort, periodKey,
+  prevPeriod, EMPLOYEES,
+} from "@/lib/mock-data/paye";
+import { payeRepository } from "@/lib/repositories/paye.repository";
+import { formatNGN, formatNGNCompact, formatPct, validateForRun } from "@/lib/services/paye.service";
 import {
   Calculator, CheckCircle2, AlertTriangle, ArrowRight, Download, ShieldCheck, Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function PayrollRuns() {
-  const current = getRun(CURRENT_PERIOD)!;
-  const prior = getRun(prevPeriod(CURRENT_PERIOD));
-  const issues = useMemo(() => validateForRun(), []);
+  const current = payeRepository.getRunByPeriod(CURRENT_PERIOD)!;
+  const prior = payeRepository.getRunByPeriod(prevPeriod(CURRENT_PERIOD));
+  const issues = useMemo(() => validateForRun(EMPLOYEES), []);
 
   const errorCount = issues.filter(i => i.severity === "error").length;
   const warningCount = issues.filter(i => i.severity === "warning").length;
@@ -131,7 +132,7 @@ export default function PayrollRuns() {
             </thead>
             <tbody>
               {current.entries.map((e) => {
-                const emp = getEmployee(e.employeeId);
+                const emp = payeRepository.getEmployeeById(e.employeeId);
                 const delta = e.priorMonthlyPaye !== undefined && e.priorMonthlyPaye > 0
                   ? ((e.monthlyPaye - e.priorMonthlyPaye) / e.priorMonthlyPaye) * 100
                   : null;

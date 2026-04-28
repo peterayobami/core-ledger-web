@@ -2,11 +2,12 @@ import { CALayout } from "@/components/ca/CALayout";
 import { StatusBanner } from "@/components/ca/StatusBadge";
 import { KpiCard } from "@/components/ca/KpiCard";
 import { Button } from "@/components/ui/button";
-import { useFY } from "@/context/fiscal-year";
+import { useFiscalYearStore } from "@/stores/fiscal-year.store";
+import { caRepository } from "@/lib/repositories/ca.repository";
 import {
-  CLASSIFICATIONS, getYear, formatNGN, formatPct, totalAA, totalPoolCost, totalTwdvCf,
-  groupColor, taxComputation, YEARS,
-} from "@/lib/ca-data";
+  CLASSIFICATIONS, YEARS,
+} from "@/lib/mock-data/ca";
+import { formatNGN, formatPct, totalAA, totalPoolCost, totalTwdvCf, groupColor, taxComputation } from "@/lib/services/ca.service";
 import { ArrowRight, Calculator, Lock, Eye, FileSpreadsheet, FileText } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, YAxis, XAxis, Tooltip, Cell,
@@ -15,8 +16,8 @@ import {
 import { cn } from "@/lib/utils";
 
 export default function OverviewPage() {
-  const { fiscalYear } = useFY();
-  const year = getYear(fiscalYear);
+  const { fiscalYear } = useFiscalYearStore();
+  const year = caRepository.getByFiscalYear(fiscalYear);
   if (!year) return <CALayout breadcrumbs={["Taxation", "Capital Allowance"]}>No data for FY {fiscalYear}</CALayout>;
 
   const prior = YEARS.find((y) => y.fiscalYear === fiscalYear - 1);

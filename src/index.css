@@ -1,17 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Capital Allowance — Enterprise Design System
-   All colors in HSL. Inspired by SAP/Xero/NetSuite — clean, neutral, data-dense. */
+/* Capital Allowance ΓÇö Enterprise Design System
+   All colors in HSL. Inspired by SAP/Xero/NetSuite ΓÇö clean, neutral, data-dense. */
 
 @layer base {
   :root {
     /* Surfaces */
-    --background: 210 20% 98%;          /* gray-50 page bg */
-    --foreground: 222 47% 11%;           /* slate-900 text */
+    --background: 210 20% 98%;
+    /* gray-50 page bg */
+    --foreground: 222 47% 11%;
+    /* slate-900 text */
 
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -35,15 +37,18 @@
     --muted-foreground: 215 16% 47%;
 
     /* Status palette */
-    --success: 158 64% 40%;              /* emerald-600 */
+    --success: 158 64% 40%;
+    /* emerald-600 */
     --success-foreground: 0 0% 100%;
     --success-soft: 152 81% 96%;
 
-    --warning: 38 92% 50%;               /* amber-500 */
+    --warning: 38 92% 50%;
+    /* amber-500 */
     --warning-foreground: 26 83% 14%;
     --warning-soft: 48 100% 96%;
 
-    --danger: 0 72% 51%;                 /* red-600 */
+    --danger: 0 72% 51%;
+    /* red-600 */
     --danger-foreground: 0 0% 100%;
     --danger-soft: 0 86% 97%;
 
@@ -51,14 +56,15 @@
     --destructive-foreground: 0 0% 100%;
 
     /* Borders & inputs */
-    --border: 214 20% 90%;               /* gray-200 */
+    --border: 214 20% 90%;
+    /* gray-200 */
     --border-strong: 214 18% 82%;
     --input: 214 20% 90%;
     --ring: 239 84% 60%;
 
     --radius: 0.5rem;
 
-    /* Sidebar — slate-900 */
+    /* Sidebar ΓÇö slate-900 */
     --sidebar-background: 222 47% 11%;
     --sidebar-foreground: 215 20% 75%;
     --sidebar-primary: 239 84% 60%;
@@ -89,24 +95,32 @@
   * {
     @apply border-border;
   }
-  html, body, #root {
+
+  html,
+  body {
     height: 100%;
   }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Open Sans', system-ui, -apple-system, sans-serif;
   }
-  .font-mono, .mono {
-    font-family: 'Open Sans', system-ui, -apple-system, sans-serif;
-    font-feature-settings: "tnum";
-  }
 }
 
 @layer components {
-  /* Financial figure */
+
+  /* Financial figures ΓÇö always JetBrains Mono */
   .fig {
-    @apply font-mono tabular-nums text-right;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
   }
+
+  .mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-feature-settings: "tnum";
+  }
+
   .fig-neg {
     @apply text-danger;
   }
@@ -126,21 +140,30 @@
   .data-table thead th {
     @apply text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-secondary/60 border-b border-border;
   }
+
   .data-table tbody tr {
     @apply border-b border-border/70 transition-colors;
   }
+
   .data-table tbody tr:hover {
     @apply bg-secondary/40;
   }
+
   .data-table tbody tr:nth-child(even) {
     background-color: hsl(var(--secondary) / 0.25);
   }
+
   .data-table tfoot td {
     @apply bg-secondary font-semibold border-t-2 border-border-strong;
   }
 }
 
 @media print {
-  .no-print { display: none !important; }
-  body { background: white; }
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+  }
 }

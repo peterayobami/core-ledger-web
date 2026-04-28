@@ -4,9 +4,9 @@ import {
   LayoutDashboard, Settings, FileBarChart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useFY } from "@/context/fiscal-year";
-import { getYear } from "@/lib/ca-data";
-import { getRun, CURRENT_PERIOD } from "@/lib/paye-data";
+import { useFiscalYearStore } from "@/stores/fiscal-year.store";
+import { caRepository } from "@/lib/repositories/ca.repository";
+import { payeRepository } from "@/lib/repositories/paye.repository";
 
 type NavRow =
   | { kind: "item"; label: string; to: string; statusKey?: "ca" | "tax" | "paye" | "vat" | "wht"; icon?: any }
@@ -57,8 +57,8 @@ function StatusDot({ kind }: { kind: "gray" | "amber" | "green" }) {
 }
 
 function useStatusFor(key?: "ca" | "tax" | "paye" | "vat" | "wht"): "gray" | "amber" | "green" {
-  const { fiscalYear } = useFY();
-  const y = getYear(fiscalYear);
+  const { fiscalYear } = useFiscalYearStore();
+  const y = caRepository.getByFiscalYear(fiscalYear);
   if (!key) return "gray";
   if (key === "ca") {
     if (!y) return "gray";
@@ -68,7 +68,8 @@ function useStatusFor(key?: "ca" | "tax" | "paye" | "vat" | "wht"): "gray" | "am
     return y?.citPayable !== undefined && y.status === "locked" ? "green" : "gray";
   }
   if (key === "paye") {
-    const r = getRun(CURRENT_PERIOD);
+    const currentPeriod = payeRepository.getCurrentPeriod();
+    const r = payeRepository.getRunByPeriod(currentPeriod);
     if (!r || r.status === "no_run") return "gray";
     if (r.status === "locked") return "green";
     return "amber";

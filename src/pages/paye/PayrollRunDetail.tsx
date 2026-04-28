@@ -4,9 +4,11 @@ import { KpiCard } from "@/components/ca/KpiCard";
 import { RunStatusBadge, RemittanceBadge, BandChip } from "@/components/paye/RunStatusBadge";
 import { Button } from "@/components/ui/button";
 import {
-  RUNS, getEmployee, periodKey, periodLong, periodShort,
-  formatNGN, formatNGNCompact, formatPct, prevPeriod,
-} from "@/lib/paye-data";
+  RUNS, periodKey, periodLong, periodShort,
+  prevPeriod,
+} from "@/lib/mock-data/paye";
+import { payeRepository } from "@/lib/repositories/paye.repository";
+import { formatNGN, formatNGNCompact, formatPct } from "@/lib/services/paye.service";
 import { ArrowLeft, Download, ShieldCheck, Lock, FileText, ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -108,7 +110,7 @@ export default function PayrollRunDetail() {
             </thead>
             <tbody>
               {run.entries.map((e) => {
-                const emp = getEmployee(e.employeeId);
+                const emp = payeRepository.getEmployeeById(e.employeeId);
                 const delta = e.priorMonthlyPaye !== undefined ? e.monthlyPaye - e.priorMonthlyPaye : null;
                 return (
                   <tr key={e.employeeId}>

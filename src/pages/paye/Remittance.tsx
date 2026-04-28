@@ -4,9 +4,11 @@ import { RemittanceBadge } from "@/components/paye/RunStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
-  RUNS, periodKey, periodLong, formatNGN, formatNGNCompact, CURRENT_PERIOD,
-  prevPeriod, getRun, EMPLOYEES,
-} from "@/lib/paye-data";
+  RUNS, periodKey, periodLong, CURRENT_PERIOD,
+  prevPeriod, EMPLOYEES,
+} from "@/lib/mock-data/paye";
+import { payeRepository } from "@/lib/repositories/paye.repository";
+import { formatNGN, formatNGNCompact } from "@/lib/services/paye.service";
 import { Send, Download, AlertCircle, CheckCircle2 } from "lucide-react";
 
 const STATE_AUTHORITY: Record<string, { name: string; code: string }> = {
@@ -21,7 +23,7 @@ const STATE_AUTHORITY: Record<string, { name: string; code: string }> = {
 };
 
 export default function Remittance() {
-  const current = getRun(CURRENT_PERIOD)!;
+  const current = payeRepository.getRunByPeriod(CURRENT_PERIOD)!;
   const allRuns = useMemo(() => [...RUNS].reverse(), []);
 
   // Today reference for due-date math (matches mock data)

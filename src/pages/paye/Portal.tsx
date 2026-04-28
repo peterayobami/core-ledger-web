@@ -6,9 +6,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  EMPLOYEES, computePaye, formatNGN, formatNGNCompact, formatPct,
-  CURRENT_PERIOD, periodLong, periodShort, RUNS, getRun, MONTH_NAMES,
-} from "@/lib/paye-data";
+  EMPLOYEES, CURRENT_PERIOD, periodLong, periodShort, RUNS, MONTH_NAMES,
+} from "@/lib/mock-data/paye";
+import { payeRepository } from "@/lib/repositories/paye.repository";
+import { computePaye, formatNGN, formatNGNCompact, formatPct } from "@/lib/services/paye.service";
 import { Download, FileCheck2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +19,7 @@ export default function PayePortal() {
   const employee = eligible.find(e => e.id === empId)!;
 
   const c = useMemo(() => computePaye(employee.profile), [employee]);
-  const currentRun = getRun(CURRENT_PERIOD)!;
+  const currentRun = payeRepository.getRunByPeriod(CURRENT_PERIOD)!;
   const myEntry = currentRun.entries.find(e => e.employeeId === employee.id);
 
   // YTD aggregation
