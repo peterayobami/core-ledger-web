@@ -1,13 +1,13 @@
 import { cn } from "@/lib/utils";
 import { Calculator, ShieldCheck, Lock, CircleDashed, AlertCircle, Clock } from "lucide-react";
-import type { PayeRunStatus, RemittanceStatus } from "@/lib/paye-data";
+import type { PayeRunStatus, RemittanceStatus } from "@/lib/models/paye";
 
 export function RunStatusBadge({ status, size = "sm" }: { status: PayeRunStatus; size?: "sm" | "md" }) {
   const cfg = {
-    no_run:    { cls: "bg-secondary text-muted-foreground border-border",        Icon: CircleDashed, label: "Not Run" },
-    computed:  { cls: "bg-warning-soft text-warning border-warning/30",          Icon: Calculator,   label: "Computed" },
-    approved:  { cls: "bg-accent-soft text-accent border-accent/30",             Icon: ShieldCheck,  label: "Approved" },
-    locked:    { cls: "bg-success-soft text-success border-success/20",          Icon: Lock,         label: "Locked" },
+    no_run: { cls: "bg-secondary text-muted-foreground border-border", Icon: CircleDashed, label: "Not Run" },
+    computed: { cls: "bg-warning-soft text-warning border-warning/30", Icon: Calculator, label: "Computed" },
+    approved: { cls: "bg-accent-soft text-accent border-accent/30", Icon: ShieldCheck, label: "Approved" },
+    locked: { cls: "bg-success-soft text-success border-success/20", Icon: Lock, label: "Locked" },
   }[status];
   return (
     <span className={cn(
@@ -23,10 +23,10 @@ export function RunStatusBadge({ status, size = "sm" }: { status: PayeRunStatus;
 
 export function RemittanceBadge({ status, size = "sm" }: { status: RemittanceStatus; size?: "sm" | "md" }) {
   const cfg = {
-    not_due:   { cls: "bg-secondary text-muted-foreground border-border",   Icon: CircleDashed, label: "Not Due" },
-    pending:   { cls: "bg-warning-soft text-warning border-warning/30",     Icon: Clock,        label: "Pending" },
-    submitted: { cls: "bg-success-soft text-success border-success/20",     Icon: ShieldCheck,  label: "Submitted" },
-    overdue:   { cls: "bg-danger-soft text-danger border-danger/30",        Icon: AlertCircle,  label: "Overdue" },
+    not_due: { cls: "bg-secondary text-muted-foreground border-border", Icon: CircleDashed, label: "Not Due" },
+    pending: { cls: "bg-warning-soft text-warning border-warning/30", Icon: Clock, label: "Pending" },
+    submitted: { cls: "bg-success-soft text-success border-success/20", Icon: ShieldCheck, label: "Submitted" },
+    overdue: { cls: "bg-danger-soft text-danger border-danger/30", Icon: AlertCircle, label: "Overdue" },
   }[status];
   return (
     <span className={cn(
@@ -43,7 +43,7 @@ export function RemittanceBadge({ status, size = "sm" }: { status: RemittanceSta
 export function BandChip({ rate }: { rate: number }) {
   const cls = (() => {
     switch (rate) {
-      case 0:  return "bg-secondary text-muted-foreground border-border";
+      case 0: return "bg-secondary text-muted-foreground border-border";
       case 15: return "bg-accent-soft text-accent border-accent/30";
       case 18: return "bg-accent/15 text-accent border-accent/40";
       case 21: return "bg-accent text-accent-foreground border-accent";

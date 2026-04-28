@@ -1,4 +1,10 @@
-// Legacy route — redirects to dashboard
-import Dashboard from "./Dashboard";
-const Index = Dashboard;
-export default Index;
+import { useEffect } from "react";
+import { useRouter } from "next/router";
+
+export default function Index() {
+    const router = useRouter();
+    useEffect(() => {
+        router.replace("/dashboard");
+    }, [router]);
+    return null;
+}

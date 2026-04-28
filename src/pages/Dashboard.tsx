@@ -1,9 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { AppShell } from "@/components/layout/AppShell";
+import Link from "next/link";
 import { TopBar } from "@/components/layout/TopBar";
-import { useFY } from "@/context/fiscal-year";
-import { getYear, formatNGN as formatNGNCa, formatNGN, totalAA, totalPoolCost, totalTwdvCf, taxComputation, YEARS } from "@/lib/ca-data";
+import { useFiscalYearStore } from "@/stores/fiscal-year.store";
+import { caRepository } from "@/lib/repositories/ca.repository";
+import { payeRepository } from "@/lib/repositories/paye.repository";
+import { formatNGN, formatNGN as formatNGNCa, totalAA, totalPoolCost, totalTwdvCf, taxComputation } from "@/lib/services/ca.service";
+import { formatNGN as formatNGNPaye, formatNGNCompact, formatPct, bandColor, bandDistribution } from "@/lib/services/paye.service";
+import { YEARS } from "@/lib/mock-data/ca";
+import { RUNS, CURRENT_PERIOD, MONTH_LONG, EMPLOYEES, periodLong, periodShort, prevPeriod, addMonths } from "@/lib/mock-data/paye";
+import type { Period } from "@/lib/models/paye";
 import { KpiCard } from "@/components/ca/KpiCard";
 import { StatusBadge } from "@/components/ca/StatusBadge";
 import { ArrowRight, Building2, Calculator, ChevronDown, TrendingUp, Users, Receipt, ShieldCheck, AlertTriangle, Lock as LockIcon } from "lucide-react";
@@ -14,11 +19,6 @@ import {
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import {
-  RUNS, getRun, CURRENT_PERIOD, prevPeriod, periodLong, periodShort, formatNGN as formatNGNPaye,
-  formatNGNCompact, formatPct, bandColor, bandDistribution, MONTH_LONG, addMonths, getEmployee, EMPLOYEES,
-  type Period,
-} from "@/lib/paye-data";
-import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -27,7 +27,7 @@ type Tab = "overview" | "ca" | "paye";
 export default function Dashboard() {
   const [tab, setTab] = useState<Tab>("overview");
   return (
-    <AppShell>
+    <>
       <TopBar breadcrumbs={["Dashboard"]} />
       <div className="border-b border-border bg-card">
         <div className="px-6 flex items-center gap-1">
@@ -55,15 +55,15 @@ export default function Dashboard() {
         {tab === "ca" && <CATab />}
         {tab === "paye" && <PayeAnalysisTab />}
       </main>
-    </AppShell>
+    </>
   );
 }
 
 /* ---------------- Overview Tab ---------------- */
 
 function OverviewTab() {
-  const { fiscalYear } = useFY();
-  const year = getYear(fiscalYear)!;
+  const { fiscalYear } = useFiscalYearStore();
+  const year = caRepository.getByFiscalYear(fiscalYear)!;
   const t = year.status !== "not_computed" ? taxComputation(year) : null;
 
   // Fake monthly Revenue vs Expenses for last 6 months derived from year totals
@@ -134,7 +134,7 @@ function OverviewTab() {
             <h3 className="text-sm font-semibold">Recent Fiscal Years</h3>
             <p className="text-xs text-muted-foreground">Quick access to historical computations</p>
           </div>
-          <Link to="/taxation/capital-allowance/history" className="text-xs text-accent font-medium inline-flex items-center gap-1">
+          <Link href="/taxation/capital-allowance/history" className="text-xs text-accent font-medium inline-flex items-center gap-1">
             View history <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -173,8 +173,8 @@ function OverviewTab() {
 /* ---------------- CA Summary Tab ---------------- */
 
 function CATab() {
-  const { fiscalYear } = useFY();
-  const year = getYear(fiscalYear)!;
+  const { fiscalYear } = useFiscalYearStore();
+  const year = caRepository.getByFiscalYear(fiscalYear)!;
   const t = year.status !== "not_computed" ? taxComputation(year) : null;
 
   return (
@@ -186,7 +186,7 @@ function CATab() {
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge status={year.status} size="md" />
-          <Link to="/taxation/capital-allowance" className="text-xs text-accent font-medium inline-flex items-center gap-1 hover:gap-2 transition-all">
+          <Link href="/taxation/capital-allowance" className="text-xs text-accent font-medium inline-flex items-center gap-1 hover:gap-2 transition-all">
             View Full Schedule <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -211,7 +211,7 @@ function CATab() {
             <div className="text-xs text-muted-foreground">Schedule, classifications, history and lock workflow</div>
           </div>
         </div>
-        <Link to="/taxation/capital-allowance">
+        <Link href="/taxation/capital-allowance">
           <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
             Open Module <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
@@ -225,8 +225,8 @@ function CATab() {
 
 function PayeAnalysisTab() {
   const [period, setPeriod] = useState<Period>(CURRENT_PERIOD);
-  const run = getRun(period);
-  const prior = getRun(prevPeriod(period));
+  const run = payeRepository.getRunByPeriod(period);
+  const prior = payeRepository.getRunByPeriod(prevPeriod(period));
 
   if (!run) {
     return (
@@ -439,8 +439,8 @@ function PayeAnalysisTab() {
             <h3 className="text-sm font-semibold">Top PAYE Contributors</h3>
             <p className="text-xs text-muted-foreground">{periodLong(period)} · sorted by PAYE</p>
           </div>
-          <Link to="/taxation/paye" className="text-xs text-accent font-medium inline-flex items-center gap-1">
-            View Run → 
+          <Link href="/taxation/paye" className="text-xs text-accent font-medium inline-flex items-center gap-1">
+            View Run →
           </Link>
         </div>
         <div className="overflow-x-auto">
@@ -456,7 +456,7 @@ function PayeAnalysisTab() {
             </thead>
             <tbody>
               {[...run.entries].sort((a, b) => b.monthlyPaye - a.monthlyPaye).slice(0, 5).map((e) => {
-                const emp = getEmployee(e.employeeId)!;
+                const emp = payeRepository.getEmployeeById(e.employeeId)!;
                 return (
                   <tr key={e.employeeId}>
                     <td className="px-4 py-2.5 font-medium">{emp.name}</td>
@@ -475,11 +475,11 @@ function PayeAnalysisTab() {
   );
 }
 
-function RemittanceStatusCard({ run, period }: { run: ReturnType<typeof getRun> & {}; period: Period }) {
+function RemittanceStatusCard({ run, period }: { run: ReturnType<typeof payeRepository.getRunByPeriod> & {}; period: Period }) {
   // Status logic
   const today = new Date(`${CURRENT_PERIOD.year}-${String(CURRENT_PERIOD.month).padStart(2, "0")}-15`);
   const next = addMonths(period, 1);
-  const due = new Date(`${next.year}-${String(next.month).padStart(2,"0")}-10`);
+  const due = new Date(`${next.year}-${String(next.month).padStart(2, "0")}-10`);
   const daysToDue = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
   let badge: { label: string; cls: string; Icon: any; sub?: string };
@@ -508,7 +508,7 @@ function RemittanceStatusCard({ run, period }: { run: ReturnType<typeof getRun> 
   );
 }
 
-function QuickActions({ run, period }: { run: ReturnType<typeof getRun> & {}; period: Period }) {
+function QuickActions({ run, period }: { run: ReturnType<typeof payeRepository.getRunByPeriod> & {}; period: Period }) {
   const { status } = run;
   return (
     <div className="data-card p-5 flex flex-col gap-3">
@@ -522,7 +522,7 @@ function QuickActions({ run, period }: { run: ReturnType<typeof getRun> & {}; pe
       )}
       {status === "computed" && (
         <div className="space-y-2">
-          <Link to="/taxation/paye" className="block">
+          <Link href="/taxation/paye" className="block">
             <Button variant="outline" className="w-full">Review Run <ArrowRight className="h-3.5 w-3.5 ml-2" /></Button>
           </Link>
           <Button className="bg-accent text-accent-foreground hover:bg-accent/90 w-full">
@@ -532,7 +532,7 @@ function QuickActions({ run, period }: { run: ReturnType<typeof getRun> & {}; pe
       )}
       {status === "approved" && (
         <div className="space-y-2">
-          <Link to="/taxation/paye" className="block">
+          <Link href="/taxation/paye" className="block">
             <Button variant="outline" className="w-full">View Payroll <ArrowRight className="h-3.5 w-3.5 ml-2" /></Button>
           </Link>
           <Button className="bg-success text-success-foreground hover:bg-success/90 w-full">
@@ -545,7 +545,7 @@ function QuickActions({ run, period }: { run: ReturnType<typeof getRun> & {}; pe
           <span className="inline-flex items-center gap-1.5 rounded-md bg-success-soft text-success px-3 py-1.5 text-xs font-semibold">
             <LockIcon className="h-3.5 w-3.5" /> Locked
           </span>
-          <Link to="/taxation/paye" className="block">
+          <Link href="/taxation/paye" className="block">
             <Button variant="outline" className="w-full text-sm">View Remittance <ArrowRight className="h-3.5 w-3.5 ml-2" /></Button>
           </Link>
         </div>

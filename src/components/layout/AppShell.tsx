@@ -1,49 +1,50 @@
 import { ReactNode } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import {
   LayoutDashboard, Settings, FileBarChart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useFY } from "@/context/fiscal-year";
-import { getYear } from "@/lib/ca-data";
-import { getRun, CURRENT_PERIOD } from "@/lib/paye-data";
+import { useFiscalYearStore } from "@/stores/fiscal-year.store";
+import { caRepository } from "@/lib/repositories/ca.repository";
+import { payeRepository } from "@/lib/repositories/paye.repository";
 
 type NavRow =
   | { kind: "item"; label: string; to: string; statusKey?: "ca" | "tax" | "paye" | "vat" | "wht"; icon?: any }
   | { kind: "label"; label: string };
 
 const NAV: NavRow[] = [
-  { kind: "item", label: "Dashboard", to: "/", icon: LayoutDashboard },
+  { kind: "item", label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
 
   { kind: "label", label: "Contacts" },
-  { kind: "item", label: "Vendors",        to: "/contacts/vendors" },
-  { kind: "item", label: "Customers",      to: "/contacts/customers" },
-  { kind: "item", label: "Employees",      to: "/contacts/employees" },
+  { kind: "item", label: "Vendors", to: "/contacts/vendors" },
+  { kind: "item", label: "Customers", to: "/contacts/customers" },
+  { kind: "item", label: "Employees", to: "/contacts/employees" },
 
   { kind: "label", label: "Reports" },
   { kind: "item", label: "Profit and Loss", to: "/reports/profit-and-loss" },
-  { kind: "item", label: "Balance Sheet",   to: "/reports/balance-sheet" },
-  { kind: "item", label: "Cash Flow",       to: "/reports/cash-flow" },
-  { kind: "item", label: "Trial Balance",   to: "/reports/trial-balance" },
+  { kind: "item", label: "Balance Sheet", to: "/reports/balance-sheet" },
+  { kind: "item", label: "Cash Flow", to: "/reports/cash-flow" },
+  { kind: "item", label: "Trial Balance", to: "/reports/trial-balance" },
 
   { kind: "label", label: "Books" },
   { kind: "item", label: "Charts of Accounts", to: "/books/charts-of-accounts" },
-  { kind: "item", label: "Journals",           to: "/books/journals" },
+  { kind: "item", label: "Journals", to: "/books/journals" },
 
   { kind: "label", label: "Transactions" },
-  { kind: "item", label: "Assets",     to: "/transactions/assets" },
-  { kind: "item", label: "Purchases",  to: "/transactions/purchases" },
-  { kind: "item", label: "Revenue",    to: "/transactions/revenue" },
-  { kind: "item", label: "Expenses",   to: "/transactions/expenses" },
+  { kind: "item", label: "Assets", to: "/transactions/assets" },
+  { kind: "item", label: "Purchases", to: "/transactions/purchases" },
+  { kind: "item", label: "Revenue", to: "/transactions/revenue" },
+  { kind: "item", label: "Expenses", to: "/transactions/expenses" },
 
   { kind: "label", label: "Taxation" },
   { kind: "item", label: "Capital Allowance", to: "/taxation/capital-allowance", statusKey: "ca" },
-  { kind: "item", label: "Tax Computation",   to: "/taxation/tax-computation",   statusKey: "tax" },
-  { kind: "item", label: "PAYE",              to: "/taxation/paye",              statusKey: "paye" },
-  { kind: "item", label: "VAT",               to: "/taxation/vat",               statusKey: "vat" },
-  { kind: "item", label: "WHT",               to: "/taxation/wht",               statusKey: "wht" },
+  { kind: "item", label: "Tax Computation", to: "/taxation/tax-computation", statusKey: "tax" },
+  { kind: "item", label: "PAYE", to: "/taxation/paye", statusKey: "paye" },
+  { kind: "item", label: "VAT", to: "/taxation/vat", statusKey: "vat" },
+  { kind: "item", label: "WHT", to: "/taxation/wht", statusKey: "wht" },
 
-  { kind: "item", label: "Reports",  to: "/reports",  icon: FileBarChart },
+  { kind: "item", label: "Reports", to: "/reports", icon: FileBarChart },
   { kind: "item", label: "Settings", to: "/settings", icon: Settings },
 ];
 
@@ -57,8 +58,8 @@ function StatusDot({ kind }: { kind: "gray" | "amber" | "green" }) {
 }
 
 function useStatusFor(key?: "ca" | "tax" | "paye" | "vat" | "wht"): "gray" | "amber" | "green" {
-  const { fiscalYear } = useFY();
-  const y = getYear(fiscalYear);
+  const { fiscalYear } = useFiscalYearStore();
+  const y = caRepository.getByFiscalYear(fiscalYear);
   if (!key) return "gray";
   if (key === "ca") {
     if (!y) return "gray";
@@ -68,7 +69,8 @@ function useStatusFor(key?: "ca" | "tax" | "paye" | "vat" | "wht"): "gray" | "am
     return y?.citPayable !== undefined && y.status === "locked" ? "green" : "gray";
   }
   if (key === "paye") {
-    const r = getRun(CURRENT_PERIOD);
+    const currentPeriod = payeRepository.getCurrentPeriod();
+    const r = payeRepository.getRunByPeriod(currentPeriod);
     if (!r || r.status === "no_run") return "gray";
     if (r.status === "locked") return "green";
     return "amber";
@@ -79,28 +81,27 @@ function useStatusFor(key?: "ca" | "tax" | "paye" | "vat" | "wht"): "gray" | "am
 function SidebarItem({ row }: { row: Extract<NavRow, { kind: "item" }> }) {
   const status = useStatusFor(row.statusKey);
   const Icon = row.icon;
+  const { pathname } = useRouter();
+  const isActive = row.to === "/dashboard"
+    ? pathname === "/dashboard" || pathname === "/"
+    : pathname.startsWith(row.to);
   return (
-    <NavLink
-      to={row.to}
-      end={row.to === "/"}
-      className={({ isActive }) => cn(
+    <Link
+      href={row.to}
+      className={cn(
         "group relative flex items-center gap-2 rounded-md pl-3 pr-2 py-1.5 text-[13px] transition-colors",
         isActive
           ? "bg-accent-soft text-accent font-medium"
           : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
       )}
     >
-      {({ isActive }) => (
-        <>
-          {isActive && (
-            <span className="absolute left-0 top-1 bottom-1 w-[2px] rounded-r-full bg-accent" />
-          )}
-          {Icon && <Icon className="h-3.5 w-3.5 shrink-0 opacity-80" />}
-          <span className="flex-1 truncate">{row.label}</span>
-          {row.statusKey && <StatusDot kind={status} />}
-        </>
+      {isActive && (
+        <span className="absolute left-0 top-1 bottom-1 w-[2px] rounded-r-full bg-accent" />
       )}
-    </NavLink>
+      {Icon && <Icon className="h-3.5 w-3.5 shrink-0 opacity-80" />}
+      <span className="flex-1 truncate">{row.label}</span>
+      {row.statusKey && <StatusDot kind={status} />}
+    </Link>
   );
 }
 

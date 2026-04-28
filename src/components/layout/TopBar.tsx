@@ -1,7 +1,7 @@
 import { ChevronDown, Search, Bell, HelpCircle, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useFY } from "@/context/fiscal-year";
-import { YEARS, CURRENT_FY } from "@/lib/ca-data";
+import { useFiscalYearStore } from "@/stores/fiscal-year.store";
+import { YEARS, CURRENT_FY } from "@/lib/mock-data/ca";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
   DropdownMenuLabel, DropdownMenuSeparator,
@@ -16,7 +16,7 @@ function statusBadge(status: string, isCurrent: boolean) {
 }
 
 export function TopBar({ title, breadcrumbs }: { title?: string; breadcrumbs?: string[] }) {
-  const { fiscalYear, setFiscalYear } = useFY();
+  const { fiscalYear, setFiscalYear } = useFiscalYearStore();
   return (
     <header className="sticky top-0 z-30 h-14 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="flex h-full items-center gap-4 px-6">

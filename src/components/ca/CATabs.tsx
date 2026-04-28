@@ -1,4 +1,5 @@
-import { NavLink, useLocation } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import { cn } from "@/lib/utils";
 
 const tabs = [
@@ -9,17 +10,16 @@ const tabs = [
 ];
 
 export function CATabs() {
-  const { pathname } = useLocation();
+  const { pathname } = useRouter();
   return (
     <div className="border-b border-border bg-card">
       <div className="px-6 flex items-center gap-1 overflow-x-auto">
         {tabs.map((t) => {
           const active = pathname === t.to;
           return (
-            <NavLink
+            <Link
               key={t.to}
-              to={t.to}
-              end
+              href={t.to}
               className={cn(
                 "relative px-4 py-3 text-sm font-medium transition-colors",
                 active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
@@ -27,7 +27,7 @@ export function CATabs() {
             >
               {t.label}
               {active && <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-accent rounded-t-full" />}
-            </NavLink>
+            </Link>
           );
         })}
       </div>
