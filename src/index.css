@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -96,7 +96,7 @@
   html, body { height: 100%; }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Open Sans', system-ui, -apple-system, sans-serif;
+    font-family: 'Josefin Sans', system-ui, -apple-system, sans-serif;
   }
 }
 
