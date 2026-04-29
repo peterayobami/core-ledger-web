@@ -2,148 +2,144 @@ import { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import {
-  LayoutDashboard, Settings, FileBarChart,
+  LayoutDashboard, Briefcase, Users, UserSquare2,
+  Boxes, ShoppingCart, TrendingUp, Receipt,
+  Calculator, Wallet, Percent, FileBarChart, Building,
+  PieChart, Scale, ArrowDownUp, BookOpenCheck,
+  Network, BookText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useFiscalYearStore } from "@/stores/fiscal-year.store";
-import { caRepository } from "@/lib/repositories/ca.repository";
-import { payeRepository } from "@/lib/repositories/paye.repository";
 
-type NavRow =
-  | { kind: "item"; label: string; to: string; statusKey?: "ca" | "tax" | "paye" | "vat" | "wht"; icon?: any }
-  | { kind: "label"; label: string };
+interface NavItem { label: string; to: string; icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }> }
+interface NavGroup { label?: string; items: NavItem[] }
 
-const NAV: NavRow[] = [
-  { kind: "item", label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
-
-  { kind: "label", label: "Contacts" },
-  { kind: "item", label: "Vendors", to: "/contacts/vendors" },
-  { kind: "item", label: "Customers", to: "/contacts/customers" },
-  { kind: "item", label: "Employees", to: "/contacts/employees" },
-
-  { kind: "label", label: "Reports" },
-  { kind: "item", label: "Profit and Loss", to: "/reports/profit-and-loss" },
-  { kind: "item", label: "Balance Sheet", to: "/reports/balance-sheet" },
-  { kind: "item", label: "Cash Flow", to: "/reports/cash-flow" },
-  { kind: "item", label: "Trial Balance", to: "/reports/trial-balance" },
-
-  { kind: "label", label: "Books" },
-  { kind: "item", label: "Charts of Accounts", to: "/books/charts-of-accounts" },
-  { kind: "item", label: "Journals", to: "/books/journals" },
-
-  { kind: "label", label: "Transactions" },
-  { kind: "item", label: "Assets", to: "/transactions/assets" },
-  { kind: "item", label: "Purchases", to: "/transactions/purchases" },
-  { kind: "item", label: "Revenue", to: "/transactions/revenue" },
-  { kind: "item", label: "Expenses", to: "/transactions/expenses" },
-
-  { kind: "label", label: "Taxation" },
-  { kind: "item", label: "Capital Allowance", to: "/taxation/capital-allowance", statusKey: "ca" },
-  { kind: "item", label: "Tax Computation", to: "/taxation/tax-computation", statusKey: "tax" },
-  { kind: "item", label: "PAYE", to: "/taxation/paye", statusKey: "paye" },
-  { kind: "item", label: "VAT", to: "/taxation/vat", statusKey: "vat" },
-  { kind: "item", label: "WHT", to: "/taxation/wht", statusKey: "wht" },
-
-  { kind: "item", label: "Reports", to: "/reports", icon: FileBarChart },
-  { kind: "item", label: "Settings", to: "/settings", icon: Settings },
+const groups: NavGroup[] = [
+  { items: [{ label: "Dashboard", to: "/dashboard", icon: LayoutDashboard }] },
+  {
+    label: "CONTACTS", items: [
+      { label: "Vendors", to: "/contacts/vendors", icon: Briefcase },
+      { label: "Customers", to: "/contacts/customers", icon: Users },
+      { label: "Employees", to: "/contacts/employees", icon: UserSquare2 },
+    ]
+  },
+  {
+    label: "TRANSACTIONS", items: [
+      { label: "Assets", to: "/transactions/assets", icon: Boxes },
+      { label: "Purchases", to: "/transactions/purchases", icon: ShoppingCart },
+      { label: "Revenue", to: "/transactions/revenue", icon: TrendingUp },
+      { label: "Expenses", to: "/transactions/expenses", icon: Receipt },
+    ]
+  },
+  {
+    label: "TAXATION", items: [
+      { label: "Capital Allowance", to: "/taxation/capital-allowance", icon: Calculator },
+      { label: "Payroll", to: "/taxation/paye", icon: Wallet },
+      { label: "VAT Computation", to: "/taxation/vat", icon: Percent },
+      { label: "WHT", to: "/taxation/wht", icon: FileBarChart },
+      { label: "Income Taxes", to: "/taxation/income-taxes", icon: Building },
+    ]
+  },
+  {
+    label: "REPORTS", items: [
+      { label: "Profit and Loss", to: "/reports/profit-and-loss", icon: PieChart },
+      { label: "Balance Sheet", to: "/reports/balance-sheet", icon: Scale },
+      { label: "Cash Flow", to: "/reports/cash-flow", icon: ArrowDownUp },
+      { label: "Trial Balance", to: "/reports/trial-balance", icon: BookOpenCheck },
+    ]
+  },
+  {
+    label: "BOOKS", items: [
+      { label: "Charts of Account", to: "/books/charts-of-accounts", icon: Network },
+      { label: "Journals", to: "/books/journals", icon: BookText },
+    ]
+  },
 ];
 
-function StatusDot({ kind }: { kind: "gray" | "amber" | "green" }) {
-  const cls = {
-    gray: "bg-sidebar-foreground/30",
-    amber: "bg-warning",
-    green: "bg-success",
-  }[kind];
-  return <span className={cn("inline-block h-1.5 w-1.5 rounded-full", cls)} />;
-}
-
-function useStatusFor(key?: "ca" | "tax" | "paye" | "vat" | "wht"): "gray" | "amber" | "green" {
-  const { fiscalYear } = useFiscalYearStore();
-  const y = caRepository.getByFiscalYear(fiscalYear);
-  if (!key) return "gray";
-  if (key === "ca") {
-    if (!y) return "gray";
-    return y.status === "locked" ? "green" : y.status === "computed" ? "amber" : "gray";
-  }
-  if (key === "tax") {
-    return y?.citPayable !== undefined && y.status === "locked" ? "green" : "gray";
-  }
-  if (key === "paye") {
-    const currentPeriod = payeRepository.getCurrentPeriod();
-    const r = payeRepository.getRunByPeriod(currentPeriod);
-    if (!r || r.status === "no_run") return "gray";
-    if (r.status === "locked") return "green";
-    return "amber";
-  }
-  return "gray";
-}
-
-function SidebarItem({ row }: { row: Extract<NavRow, { kind: "item" }> }) {
-  const status = useStatusFor(row.statusKey);
-  const Icon = row.icon;
-  const { pathname } = useRouter();
-  const isActive = row.to === "/dashboard"
-    ? pathname === "/dashboard" || pathname === "/"
-    : pathname.startsWith(row.to);
-  return (
-    <Link
-      href={row.to}
-      className={cn(
-        "group relative flex items-center gap-2 rounded-md pl-3 pr-2 py-1.5 text-[13px] transition-colors",
-        isActive
-          ? "bg-accent-soft text-accent font-medium"
-          : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
-      )}
-    >
-      {isActive && (
-        <span className="absolute left-0 top-1 bottom-1 w-[2px] rounded-r-full bg-accent" />
-      )}
-      {Icon && <Icon className="h-3.5 w-3.5 shrink-0 opacity-80" />}
-      <span className="flex-1 truncate">{row.label}</span>
-      {row.statusKey && <StatusDot kind={status} />}
-    </Link>
-  );
+export function getRouteTitle(pathname: string): string {
+  const all = groups.flatMap((g) => g.items);
+  const exact = all.find((i) => i.to === pathname);
+  if (exact) return exact.label;
+  const prefix = all.find((i) => pathname.startsWith(i.to + "/"));
+  if (prefix) return prefix.label;
+  return "Core Ledger";
 }
 
 export function Sidebar() {
+  const { pathname } = useRouter();
+
   return (
-    <aside className="hidden md:flex w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
-      <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-4 shrink-0">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-accent-foreground font-semibold">
-          B
+    <aside
+      className="hidden md:flex flex-col bg-white relative shrink-0 z-30"
+      style={{ width: 250, boxShadow: "3px 0 8px rgba(51,51,51,0.059)" }}
+    >
+      {/* Logo (pinned) */}
+      <div className="h-[60px] px-4 flex items-center gap-2 border-b border-[var(--cl-border)]/70 shrink-0">
+        <div className="w-9 h-9 rounded-lg bg-[var(--cl-primary)] flex items-center justify-center text-white shrink-0">
+          <BookOpenCheck size={20} strokeWidth={2.2} />
         </div>
-        <div className="leading-tight">
-          <div className="text-sm font-semibold text-white">Bechellente</div>
-          <div className="text-[11px] text-sidebar-foreground/70">Ledger Suite</div>
+        <div className="text-[18px] tracking-tight leading-none">
+          <span className="font-semibold" style={{ color: "#184F97" }}>Core</span>
+          <span className="font-semibold" style={{ color: "#004A7E" }}>Ledger</span>
         </div>
       </div>
-      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-px">
-        {NAV.map((row, i) => {
-          if (row.kind === "label") {
-            return (
-              <div
-                key={`l-${i}`}
-                className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/45"
-              >
-                {row.label}
+
+      {/* Scrollable menu */}
+      <nav className="flex-1 overflow-y-auto scrollbar-hidden px-[13px] pt-[13px] pb-[24px]">
+        <div className="flex flex-col" style={{ gap: 20 }}>
+          {groups.map((g, gi) => (
+            <div key={gi}>
+              {g.label && (
+                <div
+                  className="px-2.5 mb-1.5 uppercase text-[11px] font-semibold"
+                  style={{ color: "#9D9D9D", letterSpacing: "0.04em" }}
+                >
+                  {g.label}
+                </div>
+              )}
+              <div className="flex flex-col" style={{ gap: 4 }}>
+                {g.items.map((it) => {
+                  const active = it.to === "/dashboard"
+                    ? pathname === "/dashboard" || pathname === "/"
+                    : pathname === it.to || pathname.startsWith(it.to + "/");
+                  const Icon = it.icon;
+                  return (
+                    <Link
+                      key={it.to}
+                      href={it.to}
+                      className={cn(
+                        "flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm transition-colors duration-150",
+                        active
+                          ? "text-[var(--cl-primary)]"
+                          : "text-[var(--cl-text-muted)] hover:bg-[rgba(24,79,151,0.06)]"
+                      )}
+                      style={
+                        active
+                          ? {
+                            backgroundColor: "rgba(24,79,151,0.10)",
+                            border: "0.5px solid rgba(24,79,151,0.50)",
+                          }
+                          : { border: "0.5px solid transparent" }
+                      }
+                    >
+                      <Icon size={18} strokeWidth={1.8} />
+                      <span className="font-medium">{it.label}</span>
+                    </Link>
+                  );
+                })}
               </div>
-            );
-          }
-          return <SidebarItem key={row.to} row={row} />;
-        })}
+            </div>
+          ))}
+        </div>
       </nav>
-      <div className="border-t border-sidebar-border p-3 text-[11px] text-sidebar-foreground/60 shrink-0">
-        v1.0 · NTA 2025
-      </div>
     </aside>
   );
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex h-screen w-full bg-background overflow-hidden">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {children}
       </div>
     </div>

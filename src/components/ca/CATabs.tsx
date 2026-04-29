@@ -12,7 +12,7 @@ const tabs = [
 export function CATabs() {
   const { pathname } = useRouter();
   return (
-    <div className="border-b border-border bg-card">
+    <div className="border-b border-border bg-card sticky top-[60px] z-10">
       <div className="px-6 flex items-center gap-1 overflow-x-auto">
         {tabs.map((t) => {
           const active = pathname === t.to;

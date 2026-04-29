@@ -29,7 +29,7 @@ export default function Dashboard() {
   return (
     <>
       <TopBar breadcrumbs={["Dashboard"]} />
-      <div className="border-b border-border bg-card">
+      <div className="border-b border-border bg-card sticky top-[60px] z-10">
         <div className="px-6 flex items-center gap-1">
           {([
             { id: "overview", label: "Overview" },
