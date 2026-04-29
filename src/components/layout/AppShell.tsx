@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface NavItem { label: string; to: string; icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }> }
+interface NavItem { label: string; to: string; icon: React.ComponentType<{ size?: string | number; strokeWidth?: number; className?: string }> }
 interface NavGroup { label?: string; items: NavItem[] }
 
 const groups: NavGroup[] = [
