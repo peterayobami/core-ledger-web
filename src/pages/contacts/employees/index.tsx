@@ -27,7 +27,7 @@ export default function EmployeesPage() {
 
     return (
         <ContactsLayout title="Employees">
-            <div className="pt-2 pb-4 sticky top-[60px] z-10 bg-background">
+            <div className="pt-2 pb-4 sticky top-[60px] z-10 bg-background -mx-6 px-6">
                 <div className="flex items-center gap-3">
                     <SearchInput value={q} onChange={setQ} placeholder="Search employees" className="w-[320px] max-w-full" />
                     <div className="ml-auto">
