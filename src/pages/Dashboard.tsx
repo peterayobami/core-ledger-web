@@ -28,8 +28,8 @@ type Tab = "overview" | "ca" | "paye";
 export default function Dashboard() {
   const [tab, setTab] = useState<Tab>("overview");
   return (
-    <AppShell>
-      <TopBar breadcrumbs={["Dashboard"]} />
+    <AppShell title="Dashboard">
+      
       <div className="border-b border-border bg-card">
         <div className="px-6 flex items-center gap-1">
           {([
@@ -51,11 +51,11 @@ export default function Dashboard() {
           ))}
         </div>
       </div>
-      <main className="flex-1 p-6 space-y-6 max-w-[1600px] w-full mx-auto">
+      <div className="p-6 space-y-6 max-w-[1600px] w-full mx-auto">
         {tab === "overview" && <OverviewTab />}
         {tab === "ca" && <CATab />}
         {tab === "paye" && <PayeAnalysisTab />}
-      </main>
+      </div>
     </AppShell>
   );
 }

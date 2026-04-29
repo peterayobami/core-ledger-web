@@ -13,9 +13,8 @@ export default function TaxComputation() {
   const year = caRepository.getByFiscalYear(fiscalYear);
 
   return (
-    <AppShell>
-      <TopBar breadcrumbs={["Taxation", "Tax Computation"]} />
-      <main className="flex-1 p-6 space-y-6 max-w-[1600px] w-full mx-auto">
+    <AppShell title="Tax Computation">
+      <div className="p-6 space-y-6 max-w-[1600px] w-full mx-auto">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Tax Computation</div>
@@ -37,7 +36,7 @@ export default function TaxComputation() {
         {year && year.status === "computed" && (
           <ComputationView year={year} preview />
         )}
-      </main>
+      </div>
     </AppShell>
   );
 }

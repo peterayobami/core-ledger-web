@@ -23,6 +23,10 @@ import CustomersPage from "./pages/contacts/Customers";
 import CustomerDetailPage from "./pages/contacts/CustomerDetail";
 import EmployeesPage from "./pages/contacts/Employees";
 import EmployeeDetailPage from "./pages/contacts/EmployeeDetail";
+import AssetsPage from "./pages/transactions/Assets";
+import PurchasesPage from "./pages/transactions/Purchases";
+import RevenuePage from "./pages/transactions/Revenue";
+import ExpensesPage from "./pages/transactions/Expenses";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 60_000 } },
@@ -55,10 +59,10 @@ const App = () => (
             <Route path="/books/charts-of-accounts" element={<Placeholder title="Charts of Accounts" breadcrumbs={["Books", "Charts of Accounts"]} />} />
             <Route path="/books/journals" element={<Placeholder title="Journals" breadcrumbs={["Books", "Journals"]} />} />
 
-            <Route path="/transactions/revenue" element={<Placeholder title="Revenue" breadcrumbs={["Transactions", "Revenue"]} />} />
-            <Route path="/transactions/purchases" element={<Placeholder title="Purchases" breadcrumbs={["Transactions", "Purchases"]} />} />
-            <Route path="/transactions/expenses" element={<Placeholder title="Expenses" breadcrumbs={["Transactions", "Expenses"]} />} />
-            <Route path="/transactions/assets" element={<Placeholder title="Assets" breadcrumbs={["Transactions", "Assets"]} />} />
+            <Route path="/transactions/revenue" element={<RevenuePage />} />
+            <Route path="/transactions/purchases" element={<PurchasesPage />} />
+            <Route path="/transactions/expenses" element={<ExpensesPage />} />
+            <Route path="/transactions/assets" element={<AssetsPage />} />
             <Route path="/assets/register" element={<Placeholder title="Asset Register" breadcrumbs={["Assets", "Asset Register"]} />} />
             <Route path="/assets/classifications" element={<Classifications />} />
             <Route path="/taxation/capital-allowance" element={<Overview />} />
@@ -74,6 +78,8 @@ const App = () => (
             <Route path="/taxation/paye/bands" element={<PayeTaxBands />} />
             <Route path="/taxation/vat" element={<Placeholder title="VAT" breadcrumbs={["Taxation", "VAT"]} />} />
             <Route path="/taxation/wht" element={<Placeholder title="WHT" breadcrumbs={["Taxation", "WHT"]} />} />
+            <Route path="/taxation/income-taxes" element={<TaxComputation />} />
+            <Route path="/taxation/income-tax" element={<TaxComputation />} />
             <Route path="/reports" element={<Placeholder title="Reports" breadcrumbs={["Reports"]} />} />
             <Route path="/settings" element={<Placeholder title="Settings" breadcrumbs={["Settings"]} />} />
             <Route path="*" element={<NotFound />} />
