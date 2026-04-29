@@ -27,6 +27,10 @@ import AssetsPage from "./pages/transactions/Assets";
 import PurchasesPage from "./pages/transactions/Purchases";
 import RevenuePage from "./pages/transactions/Revenue";
 import ExpensesPage from "./pages/transactions/Expenses";
+import VatPage from "./pages/taxation/Vat";
+import WhtPage from "./pages/taxation/Wht";
+import IncomeTaxesPage from "./pages/taxation/IncomeTaxes";
+import ProfitAndLossPage from "./pages/reports/ProfitAndLoss";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 60_000 } },
@@ -50,7 +54,7 @@ const App = () => (
             <Route path="/contacts/employees/:id" element={<EmployeeDetailPage />} />
 
             {/* Reports */}
-            <Route path="/reports/profit-and-loss" element={<Placeholder title="Profit and Loss" breadcrumbs={["Reports", "Profit and Loss"]} />} />
+            <Route path="/reports/profit-and-loss" element={<ProfitAndLossPage />} />
             <Route path="/reports/balance-sheet" element={<Placeholder title="Balance Sheet" breadcrumbs={["Reports", "Balance Sheet"]} />} />
             <Route path="/reports/cash-flow" element={<Placeholder title="Cash Flow" breadcrumbs={["Reports", "Cash Flow"]} />} />
             <Route path="/reports/trial-balance" element={<Placeholder title="Trial Balance" breadcrumbs={["Reports", "Trial Balance"]} />} />
@@ -76,11 +80,11 @@ const App = () => (
             <Route path="/taxation/paye/remittance" element={<PayeRemittance />} />
             <Route path="/taxation/paye/portal" element={<PayePortal />} />
             <Route path="/taxation/paye/bands" element={<PayeTaxBands />} />
-            <Route path="/taxation/vat" element={<Placeholder title="VAT" breadcrumbs={["Taxation", "VAT"]} />} />
-            <Route path="/taxation/wht" element={<Placeholder title="WHT" breadcrumbs={["Taxation", "WHT"]} />} />
-            <Route path="/taxation/income-taxes" element={<TaxComputation />} />
-            <Route path="/taxation/income-tax" element={<TaxComputation />} />
-            <Route path="/reports" element={<Placeholder title="Reports" breadcrumbs={["Reports"]} />} />
+            <Route path="/taxation/vat" element={<VatPage />} />
+            <Route path="/taxation/wht" element={<WhtPage />} />
+            <Route path="/taxation/income-taxes" element={<IncomeTaxesPage />} />
+            <Route path="/taxation/income-tax" element={<IncomeTaxesPage />} />
+            <Route path="/reports" element={<ProfitAndLossPage />} />
             <Route path="/settings" element={<Placeholder title="Settings" breadcrumbs={["Settings"]} />} />
             <Route path="*" element={<NotFound />} />
         </Routes>
