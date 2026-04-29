@@ -19,7 +19,7 @@ import {
   ResponsiveContainer, ComposedChart, BarChart, Bar, XAxis, YAxis, Tooltip as RTooltip,
   CartesianGrid, Legend, Line, PieChart, Pie, Cell, LabelList,
 } from "recharts";
-import { abbr, MoneyTooltip } from "./taxation/Vat";
+import { abbr, MoneyTooltip } from "@/pages/taxation/Vat";
 
 const NEG = (n: number) => `(${formatNGN(Math.abs(n))})`;
 
