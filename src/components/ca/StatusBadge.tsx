@@ -32,7 +32,7 @@ export function StatusBanner({ status, fiscalYear }: { status: CAStatus; fiscalY
       cls: "bg-warning-soft border-warning/40 text-warning",
       Icon: Clock,
       label: "COMPUTED — Pending Review & Lock",
-      sub: "Review the schedule and lock it to proceed to Tax Computation.",
+      sub: "Review the schedule and lock it to proceed to Company Tax.",
     },
     not_computed: {
       cls: "bg-secondary border-border text-muted-foreground",

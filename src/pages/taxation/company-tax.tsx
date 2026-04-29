@@ -7,17 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-export default function TaxComputation() {
+export default function CompanyTax() {
   const { fiscalYear } = useFiscalYearStore();
   const year = caRepository.getByFiscalYear(fiscalYear);
 
   return (
     <>
-      <TopBar breadcrumbs={["Taxation", "Tax Computation"]} />
+      <TopBar breadcrumbs={["Taxation", "Company Tax"]} />
       <main className="flex-1 p-6 space-y-6 max-w-[1600px] w-full mx-auto">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Tax Computation</div>
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Company Tax</div>
             <h1 className="text-xl font-semibold mt-1">Year of Assessment: AY {year?.assessmentYear}</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
               Basis Period: 01 Jan {year?.fiscalYear} – 31 Dec {year?.fiscalYear}
@@ -166,7 +166,7 @@ function ComputationView({ year, preview }: { year: ReturnType<typeof caReposito
               <Button variant="outline" size="sm"><FileSpreadsheet className="h-3.5 w-3.5 mr-1" /> Excel</Button>
             </div>
             <Button className="w-full mt-3 bg-success text-success-foreground hover:bg-success/90" size="sm">
-              <Lock className="h-3.5 w-3.5 mr-1.5" /> Lock Tax Computation
+              <Lock className="h-3.5 w-3.5 mr-1.5" /> Lock Company Tax
             </Button>
           </div>
         </aside>

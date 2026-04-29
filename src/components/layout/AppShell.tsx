@@ -36,7 +36,7 @@ const groups: NavGroup[] = [
       { label: "Payroll", to: "/taxation/paye", icon: Wallet },
       { label: "VAT Computation", to: "/taxation/vat", icon: Percent },
       { label: "WHT", to: "/taxation/wht", icon: FileBarChart },
-      { label: "Income Taxes", to: "/taxation/income-taxes", icon: Building },
+      { label: "Company Tax", to: "/taxation/company-tax", icon: Building },
     ]
   },
   {
