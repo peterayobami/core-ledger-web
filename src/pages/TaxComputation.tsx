@@ -36,7 +36,7 @@ export default function TaxComputation() {
         {year && year.status === "computed" && (
           <ComputationView year={year} preview />
         )}
-      </main>
+      </div>
     </AppShell>
   );
 }
