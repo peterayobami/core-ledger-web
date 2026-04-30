@@ -1,17 +1,17 @@
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
-import { ReportKpi, ReportKpiStrip, PageCard, StatementRow }
-  from "@/components/reports/ReportPrimitives";
+import { PageCard, StatementRow } from "@/components/reports/ReportPrimitives";
 import { YearSelect } from "@/components/reports/PeriodFilter";
 import {
   defaultYear, revenuesIn, purchasesIn, expensesIn,
-  depreciationAddbackFor, computeTax, bandFor,
+  depreciationAddbackFor, computeTax,
 } from "@/lib/services/tax.service";
 import { formatNGN } from "@/lib/utils/format";
 import {
-  TrendingUp, ShieldCheck, Calculator, Receipt,
-  AlertTriangle, ArrowRight, Lock, Info, FileText,
+  AlertTriangle, ArrowRight, Calculator, FileSpreadsheet,
+  FileText, Info, Lock, ShieldCheck,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -29,12 +29,9 @@ export default function IncomeTaxesPage() {
   const [balancingCharge, setBalancingCharge] = useState(0);
 
   const data = useMemo(() => {
-    const revs = revenuesIn(year);
-    const purs = purchasesIn(year);
-    const exps = expensesIn(year);
-    const totalRevenue = revs.reduce((s, r) => s + r.sales, 0);
-    const totalPurchases = purs.reduce((s, p) => s + p.cost, 0);
-    const totalExpenses = exps.reduce((s, e) => s + e.cost, 0);
+    const totalRevenue = revenuesIn(year).reduce((s, r) => s + r.sales, 0);
+    const totalPurchases = purchasesIn(year).reduce((s, p) => s + p.cost, 0);
+    const totalExpenses = expensesIn(year).reduce((s, e) => s + e.cost, 0);
     const depreciationAddback = depreciationAddbackFor(year);
     const t = computeTax({
       grossIncome: totalRevenue,
@@ -46,273 +43,357 @@ export default function IncomeTaxesPage() {
       balancingAllowance,
       balancingCharge,
     });
-    return {
-      totalRevenue, totalPurchases, totalExpenses, depreciationAddback, ...t,
-    };
+    return { totalRevenue, totalPurchases, totalExpenses, depreciationAddback, ...t };
   }, [year, unrecoupedCABF, annualAllowance, balancingAllowance, balancingCharge]);
 
-  return (
-    <AppShell title="Company Tax (CIT)">
-      <div className="p-6 space-y-6 max-w-[1600px] w-full mx-auto">
-        <header className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Taxation</div>
-            <h1 className="text-xl font-semibold mt-1">Company Income Tax — AY {year + 1}</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Basis Period: 01 Jan {year} – 31 Dec {year}
-            </p>
-          </div>
-          <YearSelect value={year} onChange={setYear} />
-        </header>
+  const isPreview = caStatus !== "locked";
+  const assessmentYear = year + 1;
 
-        {/* CA gate */}
-        {caStatus !== "locked" ? (
-          <div className="flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-4">
-            <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <div className="text-sm font-semibold">CA Schedule Lock Required</div>
-              <p className="text-[13px] text-foreground/80 mt-1">
-                The Capital Allowance Schedule for FY {year} must be locked before the tax liability can be finalised.
+  return (
+    <AppShell title="Company Tax">
+      <TooltipProvider delayDuration={150}>
+        <div className="p-6 space-y-6 max-w-[1600px] w-full mx-auto">
+
+          {/* Page heading */}
+          <header className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Company Tax
+              </div>
+              <h1 className="text-xl font-semibold mt-1">
+                Year of Assessment: AY {assessmentYear}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Basis Period: 01 Jan {year} – 31 Dec {year}
               </p>
             </div>
-            <button
-              onClick={() => setCaStatus("locked")}
-              className="inline-flex items-center gap-2 h-9 px-3 rounded-lg bg-warning text-warning-foreground text-sm hover:bg-warning/90"
-            >
-              <Lock className="h-3.5 w-3.5" /> Mark CA as Locked
-              <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 rounded-lg border border-success/40 bg-success/10 px-3 py-2 text-[13px] text-success">
-            <ShieldCheck className="h-4 w-4" />
-            <span className="font-semibold">CA Schedule Locked — FY {year}</span>
-            <button
-              className="ml-auto text-[12px] text-muted-foreground hover:underline"
-              onClick={() => setCaStatus("pending")}
-            >Reset</button>
-          </div>
-        )}
+            <YearSelect value={year} onChange={setYear} />
+          </header>
 
-        {/* KPIs */}
-        <ReportKpiStrip>
-          <ReportKpi label="Adjusted Profit" value={formatNGN(data.adjustedProfit)}
-            hint="Net profit + depreciation add-back" icon={TrendingUp} tone="primary" />
-          <ReportKpi label="Capital Allowance" value={formatNGN(data.totalCAAvailable)}
-            hint="Total CA available (B/F + current year)" icon={ShieldCheck} tone="skyblue" />
-          <ReportKpi label="Assessable Income" value={formatNGN(data.assessableIncome)}
-            hint="After CA relief" icon={Calculator} tone="warning" />
-          <ReportKpi label="CIT Payable" value={formatNGN(data.citPayable)}
-            hint={`${data.band} company · ${data.citRate}% rate`}
-            icon={Receipt} tone={data.citPayable > 0 ? "purple" : "success"} />
-        </ReportKpiStrip>
+          {/* CA Schedule gate */}
+          {isPreview ? (
+            <div className="flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-4">
+              <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <div className="text-sm font-semibold">CA Schedule Lock Required</div>
+                <p className="text-[13px] text-foreground/80 mt-1">
+                  The Capital Allowance Schedule for FY {year} must be locked before computing the tax liability.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => setCaStatus("locked")}
+                className="bg-warning text-warning-foreground hover:bg-warning/90"
+              >
+                <Lock className="h-3.5 w-3.5 mr-1.5" /> Lock CA Schedule
+                <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 rounded-lg border border-success/40 bg-success/10 px-3 py-2 text-[13px] text-success">
+              <ShieldCheck className="h-4 w-4" />
+              <span className="font-semibold">CA Schedule Locked — FY {year}</span>
+              <button
+                className="ml-auto text-[12px] text-muted-foreground hover:underline"
+                onClick={() => setCaStatus("pending")}
+              >Reset</button>
+            </div>
+          )}
 
-        {caStatus === "locked" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left: 2/3 */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Section A */}
-              <PageCard title="A · Adjusted Profit Computation">
-                <p className="text-[12px] text-muted-foreground -mt-3 mb-3">Statutory adjustment of accounting profit</p>
-                <StatementRow label="Gross Income (Revenue)" value={formatNGN(data.totalRevenue)} />
-                <StatementRow label="Less: Cost of Sales (Purchases)" value={NEG(data.totalPurchases)} negative />
-                <StatementRow label="Less: Tax-Deductible Expenses" value={NEG(data.totalExpenses)} negative />
-                <StatementRow label="Add: Depreciation Add-back" value={formatNGN(data.depreciationAddback)} />
-                <StatementRow label="Adjusted Profit" value={formatNGN(data.adjustedProfit)} large total />
-              </PageCard>
+          {/* Two-column layout */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-              {/* Section B */}
-              <PageCard title="B · Capital Allowance Relief">
-                <p className="text-[12px] text-muted-foreground -mt-3 mb-3">Application of CA against adjusted profit</p>
+            {/* ── LEFT: Sections A–D ── */}
+            <div className="xl:col-span-2 space-y-6">
 
-                <div className="flex items-center justify-between py-1.5">
-                  <span className="text-[13px]">Unrecouped CA Brought Forward</span>
-                  <NumInput value={unrecoupedCABF} onChange={setUnrecoupedCABF} />
-                </div>
-                <div className="flex items-center justify-between py-1.5">
-                  <span className="text-[13px]">Add: Annual Allowance (FY {year})</span>
-                  <NumInput value={annualAllowance} onChange={setAnnualAllowance} />
-                </div>
-                <StatementRow label="Total Capital Allowance Available"
-                  value={formatNGN(unrecoupedCABF + annualAllowance)} bold total />
+              {/* Section A — Adjusted Profit */}
+              <Section title="A · Adjusted Profit Computation" subtitle="Statutory adjustment of accounting profit">
+                <Line label="Gross Income (Revenue)" value={formatNGN(data.totalRevenue)} />
+                <Line label="Less: Cost of Sales (Purchases)" value={NEG(data.totalPurchases)} negative />
+                <Line label="Less: Tax-Deductible Expenses" value={NEG(data.totalExpenses)} negative />
+                <Line label="Add: Depreciation Add-back" value={formatNGN(data.depreciationAddback)} />
+                <Divider />
+                <Line label="ADJUSTED PROFIT" value={formatNGN(data.adjustedProfit)} bold large />
+              </Section>
 
-                <div className="flex items-center justify-between py-1.5 mt-2">
-                  <span className="text-[13px]">Balancing Allowance</span>
-                  <NumInput value={balancingAllowance} onChange={setBalancingAllowance} />
-                </div>
-                <div className="flex items-center justify-between py-1.5">
-                  <span className="text-[13px]">Balancing Charge</span>
-                  <NumInput value={balancingCharge} onChange={setBalancingCharge} negative />
-                </div>
+              {/* Section B — Capital Allowance Relief */}
+              <Section title="B · Capital Allowance Relief" subtitle="Application of CA against adjusted profit">
+                <EditableLine label="Unrecouped CA Brought Forward" value={unrecoupedCABF} onChange={setUnrecoupedCABF} />
+                <EditableLine
+                  label={`Add: Annual Allowance (FY ${year})`}
+                  value={annualAllowance} onChange={setAnnualAllowance}
+                />
 
-                <div className="flex items-center justify-between py-1.5 border-t border-border-strong mt-1 pt-2">
-                  <span className="text-[13px] inline-flex items-center gap-1.5 font-medium">
-                    Less: CA Relieved (limited to Adj. Profit)
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger><Info className="h-3.5 w-3.5 text-muted-foreground" /></TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          Under NTA 2025, the previous 2/3-of-assessable-profit restriction has been
-                          abolished. The full adjusted profit is available for CA relief.
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </span>
-                  <span className="mono text-[13px] text-danger font-semibold">{NEG(data.caRelieved)}</span>
-                </div>
-                <StatementRow label="Unrecouped CA Carried Forward" value={formatNGN(data.unrecoupedCF)} bold total />
-              </PageCard>
+                <EditableLine
+                  label="Add: Balancing Allowance"
+                  info="Arises when an asset is disposed for less than its TWDV. The shortfall is an additional CA deduction."
+                  value={balancingAllowance} onChange={setBalancingAllowance}
+                />
+                <EditableLine
+                  label="Less: Balancing Charge"
+                  info="Arises when an asset is disposed for more than its TWDV. The excess is added back as taxable income."
+                  value={balancingCharge} onChange={setBalancingCharge}
+                  danger
+                />
 
-              {/* Section C */}
-              <PageCard title="C · Tax Liability">
-                <p className="text-[12px] text-muted-foreground -mt-3 mb-3">Application of CIT band rate</p>
-                <StatementRow label="Assessable Income" value={formatNGN(data.assessableIncome)} />
-                <StatementRow label={`Company Income Tax @ ${data.citRate}%`}
-                  value={formatNGN(data.citPayable)} large total />
+                <Divider />
+                <Line label="Total Capital Allowance Available" value={formatNGN(data.totalCAAvailable)} bold />
+                <Line
+                  label="Less: CA Relieved (limited to Adjusted Profit)"
+                  value={NEG(data.caRelieved)}
+                  negative
+                  info="Under NTA 2025, the previous 2/3-of-assessable-profit restriction has been abolished. The full adjusted profit is available for CA relief."
+                />
+                <Divider />
+                <Line label={`Unrecouped CA Carried Forward to FY ${year + 1}`} value={formatNGN(data.unrecoupedCF)} bold />
+              </Section>
 
-                <div className="mt-4 rounded-lg bg-secondary/50 p-3">
-                  <div className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-2">
-                    CIT Rate Determination
+              {/* Section C — Tax Liability */}
+              <Section title="C · Tax Liability" subtitle="Application of CIT band rate">
+                <Line label="Assessable Income" value={formatNGN(data.assessableIncome)} />
+                <Divider />
+                <div className="rounded-md bg-primary/5 border border-primary/10 p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-sm font-semibold">
+                      Company Income Tax @ {data.citRate}%
+                    </span>
+                    <span className="mono text-xl font-bold tabular-nums">
+                      {formatNGN(data.citPayable)}
+                    </span>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 text-[12px] mb-3">
-                    <div><div className="text-muted-foreground">Gross Income</div><div className="mono font-semibold">{formatNGN(data.totalRevenue)}</div></div>
-                    <div><div className="text-muted-foreground">Band Applied</div><div className="font-semibold">{data.band}</div></div>
-                    <div><div className="text-muted-foreground">Rate</div><div className="font-semibold">{data.citRate}%</div></div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { band: "Small",  text: "≤ ₦25M · 0%" },
-                      { band: "Medium", text: "≤ ₦100M · 20%" },
-                      { band: "Large",  text: "> ₦100M · 30%" },
-                    ].map(b => (
-                      <div key={b.band}
-                        className={cn(
-                          "rounded-lg px-3 py-2 text-center text-[12px] font-medium",
-                          data.band === b.band
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground",
-                        )}>
-                        <div className="text-[11px] opacity-80">{b.band}</div>
-                        <div>{b.text}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground mt-2">CITA 3rd Schedule · NTA 2025</div>
                 </div>
-
                 {data.citPayable === 0 && (
-                  <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-success/15 text-success text-[12px] font-medium px-3 py-1">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    No CIT Payable — CA fully covers adjusted profit
+                  <div className="flex items-center gap-2 rounded-md bg-success/10 border border-success/20 px-3 py-2 text-[12px] text-success mt-2">
+                    <ShieldCheck className="h-4 w-4 shrink-0" />
+                    Capital Allowance fully covers the adjusted profit — no CIT payable.
                   </div>
                 )}
-              </PageCard>
 
-              {/* Section D */}
-              <PageCard title="D · Development Levy / Minimum Tax">
-                <p className="text-[12px] text-muted-foreground -mt-3 mb-3">Applies regardless of profit position — CITA s.33</p>
-                <StatementRow label="Gross Turnover (Revenue)" value={formatNGN(data.totalRevenue)} />
-                <StatementRow label="Minimum Tax Rate" value="0.5%" muted />
-                <StatementRow label="Development Levy Payable" value={formatNGN(data.developmentLevy)} large total />
-                <p className="mt-3 rounded-lg bg-primary/8 text-[12px] text-foreground/80 p-3">
-                  The Development Levy (minimum tax) is charged at 0.5% of gross turnover. It applies
-                  even when the company has no taxable profit or when CIT is zero due to capital
-                  allowance relief. It is not deductible for future CIT purposes.
-                </p>
-              </PageCard>
+                {/* CIT Rate Determination */}
+                <div className="mt-4 rounded-lg border border-border p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold">CIT Rate Determination</h3>
+                    <span className="text-[10px] text-muted-foreground">CITA 3rd Schedule · NTA 2025</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                    <Field label="Gross Income" value={formatNGN(data.totalRevenue)} mono />
+                    <Field label="Band Applied" value={`${data.band} Company`} />
+                    <Field label="Rate" value={`${data.citRate}%`} mono accent />
+                  </div>
+                  <div className="mt-4 grid grid-cols-3 rounded-md border border-border overflow-hidden text-[11px]">
+                    <BandCell active={data.band === "Small"}  label="≤ ₦25M"      rate="0%" />
+                    <BandCell active={data.band === "Medium"} label="≤ ₦100M"     rate="20%" />
+                    <BandCell active={data.band === "Large"}  label="Above ₦100M" rate="30%" />
+                  </div>
+                </div>
+              </Section>
+
+              {/* Section D — Development Levy */}
+              <Section title="D · Development Levy / Minimum Tax" subtitle="Applies regardless of profit position — CITA s.33">
+                <Line label="Gross Turnover (Revenue)" value={formatNGN(data.totalRevenue)} />
+                <Line label="Minimum Tax Rate" value="0.5%" />
+                <Divider />
+                <Line label="DEVELOPMENT LEVY PAYABLE" value={formatNGN(data.developmentLevy)} bold large />
+                <div className="mt-3 rounded-md bg-primary/5 border border-primary/15 px-3 py-2.5 text-[12px] text-foreground/80 leading-relaxed">
+                  <Info className="h-3.5 w-3.5 inline mr-1.5 shrink-0 align-middle text-primary" />
+                  The Development Levy is charged at <strong>0.5%</strong> of gross turnover and applies even when the company
+                  has no taxable profit or when CIT is zero due to capital allowance relief. It is not deductible for future CIT purposes.
+                </div>
+              </Section>
+
+              {/* Bottom action bar */}
+              <div className="flex items-center gap-2 pt-1">
+                <Button
+                  onClick={() => toast.success("Tax liability recomputed")}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  <Calculator className="h-4 w-4 mr-2" /> Compute Tax Liability
+                </Button>
+                <Button variant="outline" onClick={() => toast.info("Export coming soon")}>
+                  <FileText className="h-4 w-4 mr-2" /> Export Computation
+                </Button>
+              </div>
             </div>
 
-            {/* Right: 1/3 sidebar */}
-            <aside className="lg:col-span-1">
-              <div className="lg:sticky lg:top-20 cl-card border border-border p-5">
-                <h3 className="text-[15px] font-semibold mb-1">Tax Summary — AY {year + 1}</h3>
-                <div className="text-[12px] text-muted-foreground mb-3">Live computation snapshot</div>
-
-                <StatementRow label="Fiscal Year" value={`FY ${year}`} muted />
-                <StatementRow label="Assessment Year" value={`AY ${year + 1}`} muted />
-                <StatementRow label="Basis Period" value={`01 Jan – 31 Dec ${year}`} muted />
-
-                <div className="my-3 border-t border-border" />
-
-                <StatementRow label="Adjusted Profit" value={formatNGN(data.adjustedProfit)} />
-                <StatementRow label="CA Relief Utilised" value={formatNGN(data.caRelieved)} />
-                <StatementRow label="CA Remaining (C/F)" value={formatNGN(data.unrecoupedCF)} />
-                <StatementRow label="Assessable Income" value={formatNGN(data.assessableIncome)} />
-
-                <div className="my-3 border-t border-border" />
-
-                <div className="flex items-center justify-between py-1.5">
-                  <span className="text-[13px] font-medium">CIT Payable</span>
-                  <span className="mono text-[20px] font-bold text-primary">{formatNGN(data.citPayable)}</span>
+            {/* ── RIGHT: Tax Summary sidebar ── */}
+            <aside className="xl:col-span-1">
+              <div className="cl-card border border-border p-5 xl:sticky xl:top-20">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Tax Summary — AY {assessmentYear}
                 </div>
-                <StatementRow label="Development Levy" value={formatNGN(data.developmentLevy)} />
+                <div className="text-[12px] text-muted-foreground mt-0.5">Live computation snapshot</div>
 
-                <div className="my-3 border-t border-border-strong" />
+                <div className="mt-4 space-y-2.5 text-sm">
+                  <SummaryRow label="Fiscal Year" value={`FY ${year}`} mono />
+                  <SummaryRow label="Assessment Year" value={`AY ${assessmentYear}`} mono />
+                  <SummaryRow label="Basis Period" value={`01 Jan – 31 Dec ${year}`} />
+                  <div className="h-px bg-border" />
+                  <SummaryRow label="Adjusted Profit" value={formatNGN(data.adjustedProfit)} />
+                  <SummaryRow label="CA Relief Utilised" value={formatNGN(data.caRelieved)} />
+                  <SummaryRow label="CA Remaining (C/F)" value={formatNGN(data.unrecoupedCF)} />
+                  <SummaryRow label="Assessable Income" value={formatNGN(data.assessableIncome)} />
+                  <div className="h-px bg-border" />
 
-                <div className="flex items-center justify-between py-1.5">
-                  <span className="text-[13px] font-semibold uppercase tracking-wider">Total Tax Payable</span>
-                  <span className="mono text-[22px] font-bold text-foreground">
-                    {formatNGN(data.totalTaxPayable)}
-                  </span>
-                </div>
-                <StatementRow label="Effective Tax Rate" value={`${data.effectiveTaxRate.toFixed(2)}%`} muted />
-
-                {data.totalTaxPayable === 0 && (
-                  <div className="mt-3 inline-flex items-center gap-2 text-success text-[13px] font-medium">
-                    <ShieldCheck className="h-4 w-4" /> No Tax Payable
+                  <div>
+                    <div className="text-xs text-muted-foreground">CIT Payable</div>
+                    <div className="mono text-2xl font-bold mt-0.5 tabular-nums text-primary">
+                      {formatNGN(data.citPayable)}
+                    </div>
+                    {data.citPayable === 0 && (
+                      <span className="inline-flex items-center gap-1 mt-1.5 rounded-full bg-success/15 text-success px-2.5 py-0.5 text-[11px] font-semibold">
+                        <ShieldCheck className="h-3 w-3" /> No CIT Payable
+                      </span>
+                    )}
                   </div>
-                )}
 
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  <button onClick={() => toast.info("PDF export coming soon")}
-                    className="h-9 rounded-lg border border-border bg-card text-sm hover:bg-secondary">PDF</button>
-                  <button onClick={() => toast.info("Excel export coming soon")}
-                    className="h-9 rounded-lg border border-border bg-card text-sm hover:bg-secondary">Excel</button>
+                  <SummaryRow label="Development Levy" value={formatNGN(data.developmentLevy)} />
+                  <div className="h-px bg-border-strong" />
+
+                  <div>
+                    <div className="text-xs text-muted-foreground">Total Tax Payable</div>
+                    <div className="mono text-3xl font-bold mt-0.5 tabular-nums">
+                      {formatNGN(data.totalTaxPayable)}
+                    </div>
+                  </div>
+
+                  <SummaryRow label="Effective Tax Rate" value={`${data.effectiveTaxRate.toFixed(2)}%`} mono />
                 </div>
-                <button
-                  disabled={caStatus !== "locked"}
+
+                <div className="mt-5 grid grid-cols-2 gap-2">
+                  <Button variant="outline" size="sm" onClick={() => toast.info("PDF export coming soon")}>
+                    <FileText className="h-3.5 w-3.5 mr-1" /> PDF
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => toast.info("Excel export coming soon")}>
+                    <FileSpreadsheet className="h-3.5 w-3.5 mr-1" /> Excel
+                  </Button>
+                </div>
+                <Button
+                  className="w-full mt-3 bg-success text-success-foreground hover:bg-success/90"
+                  size="sm"
+                  disabled={isPreview}
                   onClick={() => toast.success("Company tax computation locked")}
-                  className="mt-2 w-full h-10 rounded-lg bg-success text-success-foreground font-semibold text-sm disabled:opacity-50 hover:bg-success/90"
                 >
-                  Lock Company Tax
-                </button>
+                  <Lock className="h-3.5 w-3.5 mr-1.5" />
+                  {isPreview ? "Lock CA Schedule First" : "Lock Company Tax"}
+                </Button>
               </div>
             </aside>
           </div>
-        )}
-
-        {caStatus === "locked" && (
-          <div className="flex items-center justify-end gap-2">
-            <button
-              onClick={() => toast.success("Tax liability recalculated")}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90"
-            >
-              <Calculator className="h-4 w-4" /> Compute Tax Liability
-            </button>
-            <button
-              onClick={() => toast.info("Export coming soon")}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-lg border border-border bg-card text-sm hover:bg-secondary"
-            >
-              <FileText className="h-4 w-4" /> Export Computation
-            </button>
-          </div>
-        )}
-      </div>
+        </div>
+      </TooltipProvider>
     </AppShell>
   );
 }
 
-function NumInput({ value, onChange, negative }: { value: number; onChange: (v: number) => void; negative?: boolean }) {
+/* ─────────────────────── Sub-components ─────────────────────── */
+
+function Section({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
-    <input
-      type="number"
-      value={value === 0 ? "" : value}
-      placeholder="0"
-      onChange={(e) => onChange(Number(e.target.value) || 0)}
-      className={cn(
-        "mono w-40 text-right border-0 border-b border-border bg-transparent focus:outline-none focus:border-primary text-[13px] py-1",
+    <PageCard className="!p-0 overflow-hidden">
+      <div className="border-b border-border px-5 py-3 bg-secondary/40">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</div>
+        {subtitle && <div className="text-xs text-muted-foreground/80 mt-0.5">{subtitle}</div>}
+      </div>
+      <div className="px-5 py-4 space-y-1">{children}</div>
+    </PageCard>
+  );
+}
+
+function Line({
+  label, value, bold, large, negative, info,
+}: {
+  label: string; value: string; bold?: boolean; large?: boolean; negative?: boolean; info?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-1.5">
+      <div className="flex items-center gap-1.5 text-sm">
+        <span className={cn(bold && "font-semibold", large && "text-base")}>{label}</span>
+        {info && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="h-3.5 w-3.5 text-primary cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs text-xs">{info}</TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+      <span className={cn(
+        "mono tabular-nums text-sm",
+        bold && "font-bold",
+        large && "text-lg",
         negative && "text-danger",
-      )}
-    />
+      )}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function EditableLine({
+  label, value, onChange, info, danger,
+}: {
+  label: string; value: number; onChange: (n: number) => void; info?: string; danger?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-1.5">
+      <div className="flex items-center gap-1.5 text-sm">
+        <span>{label}</span>
+        {info && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="h-3.5 w-3.5 text-primary cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs text-xs">{info}</TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+      <input
+        type="number"
+        min={0}
+        value={value || ""}
+        placeholder="₦0.00"
+        onChange={(e) => onChange(Number(e.target.value) || 0)}
+        className={cn(
+          "mono w-44 text-right bg-transparent border-0 border-b border-border focus:outline-none text-sm py-0.5",
+          danger ? "focus:border-danger text-danger" : "focus:border-primary",
+        )}
+      />
+    </div>
+  );
+}
+
+function Divider() {
+  return <div className="border-t border-border-strong my-1" />;
+}
+
+function Field({ label, value, mono, accent }: { label: string; value: string; mono?: boolean; accent?: boolean }) {
+  return (
+    <div>
+      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className={cn("mt-1 font-semibold", mono && "mono", accent && "text-primary text-lg")}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function BandCell({ active, label, rate }: { active: boolean; label: string; rate: string }) {
+  return (
+    <div className={cn(
+      "px-3 py-2 text-center border-r last:border-r-0 border-border",
+      active ? "bg-primary text-primary-foreground" : "bg-secondary/30 text-muted-foreground",
+    )}>
+      <div className="font-medium">{label}</div>
+      <div className={cn("mono text-[10px] mt-0.5", active ? "opacity-90" : "opacity-70")}>{rate}</div>
+    </div>
+  );
+}
+
+function SummaryRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className={cn("text-sm font-medium tabular-nums", mono && "mono")}>{value}</span>
+    </div>
   );
 }
