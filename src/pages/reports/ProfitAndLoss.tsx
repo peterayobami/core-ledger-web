@@ -112,28 +112,29 @@ export default function ProfitAndLossPage() {
             hint={`${data.band} company · ${data.citRate}% rate`} icon={Receipt} tone="purple" />
         </ReportKpiStrip>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <PageCard title="Revenue vs. Expenses (Monthly)">
-            <div style={{ width: "100%", height: 280 }}>
-              <ResponsiveContainer>
-                <ComposedChart data={monthly} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => abbr(v)} />
-                  <RTooltip content={<MoneyTooltip />} />
-                  <Legend />
-                  <Bar dataKey="revenue" name="Revenue" fill="hsl(var(--success))" radius={[4,4,0,0]} />
-                  <Bar dataKey="purchases" name="Cost of Sales" fill="hsl(var(--warning))" fillOpacity={0.8} radius={[4,4,0,0]} />
-                  <Bar dataKey="expensesTotal" name="Expenses" fill="hsl(var(--primary))" fillOpacity={0.7} radius={[4,4,0,0]} />
-                  <Line type="monotone" dataKey="netProfit" name="Net Profit" stroke="hsl(var(--chart-violet))" strokeWidth={2} dot={false} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-          </PageCard>
+        {/* Revenue vs Expenses — full row */}
+        <PageCard title="Revenue vs. Expenses (Monthly)">
+          <div style={{ width: "100%", height: 320 }}>
+            <ResponsiveContainer>
+              <ComposedChart data={monthly} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => abbr(v)} />
+                <RTooltip content={<MoneyTooltip />} />
+                <Legend />
+                <Bar dataKey="revenue" name="Revenue" fill="hsl(var(--success))" radius={[4,4,0,0]} />
+                <Bar dataKey="purchases" name="Cost of Sales" fill="hsl(var(--warning))" fillOpacity={0.8} radius={[4,4,0,0]} />
+                <Bar dataKey="expensesTotal" name="Expenses" fill="hsl(var(--primary))" fillOpacity={0.7} radius={[4,4,0,0]} />
+                <Line type="monotone" dataKey="netProfit" name="Net Profit" stroke="hsl(var(--chart-violet))" strokeWidth={2} dot={false} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </PageCard>
 
-          <PageCard title="Profit Breakdown">
-            <div style={{ width: "100%", height: 340 }}>
+        {/* Profit Breakdown (≈70%) + Expense Breakdown by Category (≈30%) — share a row */}
+        <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+          <PageCard title="Profit Breakdown" className="lg:col-span-7">
+            <div style={{ width: "100%", height: 360 }}>
               <ResponsiveContainer>
                 <BarChart data={waterfall} layout="vertical" margin={{ top: 10, right: 50, left: 100, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
@@ -146,6 +147,40 @@ export default function ProfitAndLossPage() {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
+            </div>
+          </PageCard>
+
+          <PageCard title="Expense Breakdown by Category" className="lg:col-span-3">
+            <div style={{ width: "100%", height: 220 }} className="relative">
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie data={expenseBreakdown} dataKey="value" nameKey="name"
+                    innerRadius="58%" outerRadius="88%" paddingAngle={1}>
+                    {expenseBreakdown.map((_, i) => <Cell key={i} fill={PIE[i % PIE.length]} />)}
+                  </Pie>
+                  <RTooltip content={<MoneyTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 grid place-items-center pointer-events-none">
+                <div className="text-center">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</div>
+                  <div className="mono text-[14px] font-semibold">{formatNGN(expenseTotal)}</div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-3 space-y-1.5 max-h-[120px] overflow-auto pr-1">
+              {expenseBreakdown.map((e, i) => {
+                const pct = expenseTotal > 0 ? (e.value / expenseTotal) * 100 : 0;
+                return (
+                  <div key={e.name} className="flex items-center justify-between text-[12px]">
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ background: PIE[i % PIE.length] }} />
+                      <span className="truncate">{e.name}</span>
+                    </span>
+                    <span className="mono text-muted-foreground text-[11px] shrink-0">{pct.toFixed(1)}%</span>
+                  </div>
+                );
+              })}
             </div>
           </PageCard>
         </div>
