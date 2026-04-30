@@ -23,23 +23,6 @@ const groups: NavGroup[] = [
     ]
   },
   {
-    label: "TRANSACTIONS", items: [
-      { label: "Assets", to: "/transactions/assets", icon: Boxes },
-      { label: "Purchases", to: "/transactions/purchases", icon: ShoppingCart },
-      { label: "Revenue", to: "/transactions/revenue", icon: TrendingUp },
-      { label: "Expenses", to: "/transactions/expenses", icon: Receipt },
-    ]
-  },
-  {
-    label: "TAXATION", items: [
-      { label: "Capital Allowance", to: "/taxation/capital-allowance", icon: Calculator },
-      { label: "Payroll", to: "/taxation/paye", icon: Wallet },
-      { label: "VAT Computation", to: "/taxation/vat", icon: Percent },
-      { label: "WHT", to: "/taxation/wht", icon: FileBarChart },
-      { label: "Company Tax", to: "/taxation/company-tax", icon: Building },
-    ]
-  },
-  {
     label: "REPORTS", items: [
       { label: "Profit and Loss", to: "/reports/profit-and-loss", icon: PieChart },
       { label: "Balance Sheet", to: "/reports/balance-sheet", icon: Scale },
@@ -51,6 +34,23 @@ const groups: NavGroup[] = [
     label: "BOOKS", items: [
       { label: "Charts of Account", to: "/books/charts-of-accounts", icon: Network },
       { label: "Journals", to: "/books/journals", icon: BookText },
+    ]
+  },
+  {
+    label: "TRANSACTIONS", items: [
+      { label: "Assets", to: "/transactions/assets", icon: Boxes },
+      { label: "Purchases", to: "/transactions/purchases", icon: ShoppingCart },
+      { label: "Revenue", to: "/transactions/revenue", icon: TrendingUp },
+      { label: "Expenses", to: "/transactions/expenses", icon: Receipt },
+    ]
+  },
+  {
+    label: "TAXATION", items: [
+      { label: "Capital Allowance", to: "/taxation/capital-allowance", icon: Calculator },
+      { label: "PAYE", to: "/taxation/paye", icon: Wallet },
+      { label: "VAT Computation", to: "/taxation/vat", icon: Percent },
+      { label: "WHT", to: "/taxation/wht", icon: FileBarChart },
+      { label: "Company Tax", to: "/taxation/company-tax", icon: Building },
     ]
   },
 ];
