@@ -273,45 +273,6 @@ export default function ProfitAndLossPage() {
           />
         </PageCard>
 
-        {/* Expense breakdown */}
-        <PageCard title="Expense Breakdown by Category">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-            <div style={{ width: "100%", height: 240 }} className="relative">
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie data={expenseBreakdown} dataKey="value" nameKey="name"
-                    innerRadius="55%" outerRadius="85%" paddingAngle={1}>
-                    {expenseBreakdown.map((_, i) => <Cell key={i} fill={PIE[i % PIE.length]} />)}
-                  </Pie>
-                  <RTooltip content={<MoneyTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 grid place-items-center pointer-events-none">
-                <div className="text-center">
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</div>
-                  <div className="mono text-[15px] font-semibold">{formatNGN(expenseTotal)}</div>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              {expenseBreakdown.map((e, i) => {
-                const pct = expenseTotal > 0 ? (e.value / expenseTotal) * 100 : 0;
-                return (
-                  <div key={e.name} className="flex items-center justify-between text-[13px]">
-                    <span className="flex items-center gap-2 min-w-0">
-                      <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ background: PIE[i % PIE.length] }} />
-                      <span className="truncate">{e.name}</span>
-                    </span>
-                    <span className="flex items-center gap-3 shrink-0">
-                      <span className="mono">{formatNGN(e.value)}</span>
-                      <span className="text-muted-foreground text-[11px] w-12 text-right">{pct.toFixed(1)}%</span>
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </PageCard>
       </div>
     </AppShell>
   );
