@@ -123,8 +123,11 @@ export default function JournalsPage() {
               </SelectContent>
             </Select>
             <span className="ml-auto text-[12px] text-muted-foreground">
-              Showing <span className="mono font-semibold text-foreground">{filtered.length}</span> of{" "}
-              <span className="mono">{journals.length}</span> entries
+              Showing{" "}
+              <span className="mono font-semibold text-foreground">
+                {filtered.length === 0 ? 0 : startIdx + 1}–{Math.min(startIdx + pageSize, filtered.length)}
+              </span>{" "}
+              of <span className="mono">{filtered.length}</span> entries
             </span>
           </div>
 
@@ -133,11 +136,51 @@ export default function JournalsPage() {
               No journal entries match the current filters.
             </p>
           ) : (
-            <div className="space-y-2">
-              {filtered.map(j => (
-                <JournalRow key={j.id} entry={j} />
-              ))}
-            </div>
+            <>
+              <div className="space-y-2">
+                {paginated.map(j => (
+                  <JournalRow key={j.id} entry={j} />
+                ))}
+              </div>
+
+              {/* Pagination footer */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mt-5 pt-4 border-t border-border">
+                <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+                  <span>Rows per page</span>
+                  <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+                    <SelectTrigger className="h-8 w-[72px] text-xs bg-card">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[10, 25, 50, 100].map(n => (
+                        <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline" size="sm"
+                    disabled={currentPage <= 1}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+                  </Button>
+                  <span className="px-3 text-[12px] text-muted-foreground mono">
+                    Page <span className="text-foreground font-semibold">{currentPage}</span> of{" "}
+                    <span className="text-foreground font-semibold">{totalPages}</span>
+                  </span>
+                  <Button
+                    variant="outline" size="sm"
+                    disabled={currentPage >= totalPages}
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  >
+                    Next <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            </>
           )}
         </PageCard>
       </div>
