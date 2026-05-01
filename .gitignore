@@ -17,6 +17,7 @@ dist-ssr
 
 # Build outputs
 .next
+*.tsbuildinfo
 
 # Local history
 .history
