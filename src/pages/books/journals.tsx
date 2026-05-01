@@ -71,8 +71,7 @@ export default function JournalsPage() {
   const paginated = filtered.slice(startIdx, startIdx + pageSize);
 
   // Reset to first page when filters change
-  const filterKey = `${year}|${period}|${source}|${search}|${pageSize}`;
-  useMemo(() => { setPage(1); }, [filterKey]);
+  useEffect(() => { setPage(1); }, [year, period, source, search, pageSize]);
 
   return (
     <AppShell title="Journals">
