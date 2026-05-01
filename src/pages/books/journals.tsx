@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { ReportKpi, ReportKpiStrip, PageCard, Tag } from "@/components/reports/ReportPrimitives";
 import { YearSelect, PeriodSelect, periodLabel } from "@/components/reports/PeriodFilter";
@@ -8,7 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronRight, BookOpen, FileText, ShieldCheck, Scale, Printer } from "lucide-react";
+import { ChevronRight, BookOpen, FileText, ShieldCheck, Scale, Printer, ChevronLeft } from "lucide-react";
 import { generateJournals } from "@/lib/services/ledger.service";
 import { defaultYear, type Period } from "@/lib/services/tax.service";
 import type { JournalEntry, JournalSource } from "@/lib/models/ledger";
@@ -41,6 +41,8 @@ export default function JournalsPage() {
   const [period, setPeriod] = useState<Period>("full");
   const [source, setSource] = useState<"all" | JournalSource>("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   // 🔌 BACKEND: Replace with `GET /api/journals?year=&period=&source=`.
   const journals = useMemo(() => generateJournals(year, period), [year, period]);
@@ -61,6 +63,15 @@ export default function JournalsPage() {
   const totalDr = filtered.reduce((s, j) => s + j.totalDebit, 0);
   const totalCr = filtered.reduce((s, j) => s + j.totalCredit, 0);
   const balanced = Math.abs(totalDr - totalCr) < 1;
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const startIdx = (currentPage - 1) * pageSize;
+  const paginated = filtered.slice(startIdx, startIdx + pageSize);
+
+  // Reset to first page when filters change
+  useEffect(() => { setPage(1); }, [year, period, source, search, pageSize]);
 
   return (
     <AppShell title="Journals">
@@ -112,8 +123,11 @@ export default function JournalsPage() {
               </SelectContent>
             </Select>
             <span className="ml-auto text-[12px] text-muted-foreground">
-              Showing <span className="mono font-semibold text-foreground">{filtered.length}</span> of{" "}
-              <span className="mono">{journals.length}</span> entries
+              Showing{" "}
+              <span className="mono font-semibold text-foreground">
+                {filtered.length === 0 ? 0 : startIdx + 1}–{Math.min(startIdx + pageSize, filtered.length)}
+              </span>{" "}
+              of <span className="mono">{filtered.length}</span> entries
             </span>
           </div>
 
@@ -122,11 +136,51 @@ export default function JournalsPage() {
               No journal entries match the current filters.
             </p>
           ) : (
-            <div className="space-y-2">
-              {filtered.map(j => (
-                <JournalRow key={j.id} entry={j} />
-              ))}
-            </div>
+            <>
+              <div className="space-y-2">
+                {paginated.map(j => (
+                  <JournalRow key={j.id} entry={j} />
+                ))}
+              </div>
+
+              {/* Pagination footer */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mt-5 pt-4 border-t border-border">
+                <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+                  <span>Rows per page</span>
+                  <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+                    <SelectTrigger className="h-8 w-[72px] text-xs bg-card">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[10, 25, 50, 100].map(n => (
+                        <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline" size="sm"
+                    disabled={currentPage <= 1}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+                  </Button>
+                  <span className="px-3 text-[12px] text-muted-foreground mono">
+                    Page <span className="text-foreground font-semibold">{currentPage}</span> of{" "}
+                    <span className="text-foreground font-semibold">{totalPages}</span>
+                  </span>
+                  <Button
+                    variant="outline" size="sm"
+                    disabled={currentPage >= totalPages}
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  >
+                    Next <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            </>
           )}
         </PageCard>
       </div>
