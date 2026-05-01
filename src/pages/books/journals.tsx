@@ -8,7 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronRight, BookOpen, FileText, ShieldCheck, Scale, Printer } from "lucide-react";
+import { ChevronRight, BookOpen, FileText, ShieldCheck, Scale, Printer, ChevronLeft } from "lucide-react";
 import { generateJournals } from "@/lib/services/ledger.service";
 import { defaultYear, type Period } from "@/lib/services/tax.service";
 import type { JournalEntry, JournalSource } from "@/lib/models/ledger";
