@@ -41,6 +41,8 @@ export default function JournalsPage() {
   const [period, setPeriod] = useState<Period>("full");
   const [source, setSource] = useState<"all" | JournalSource>("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   // 🔌 BACKEND: Replace with `GET /api/journals?year=&period=&source=`.
   const journals = useMemo(() => generateJournals(year, period), [year, period]);
