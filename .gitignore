@@ -1,3 +1,6 @@
+# Prompt files
+.prompts/
+
 # Logs
 logs
 *.log
