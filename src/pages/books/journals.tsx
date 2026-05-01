@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { ReportKpi, ReportKpiStrip, PageCard, Tag } from "@/components/reports/ReportPrimitives";
 import { YearSelect, PeriodSelect, periodLabel } from "@/components/reports/PeriodFilter";
