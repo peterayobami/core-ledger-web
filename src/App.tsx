@@ -31,6 +31,11 @@ import VatPage from "./pages/taxation/Vat";
 import WhtPage from "./pages/taxation/Wht";
 import IncomeTaxesPage from "./pages/taxation/IncomeTaxes";
 import ProfitAndLossPage from "./pages/reports/ProfitAndLoss";
+import BalanceSheetPage from "./pages/reports/balance-sheet";
+import CashFlowPage from "./pages/reports/cash-flow";
+import TrialBalancePage from "./pages/reports/trial-balance";
+import ChartsOfAccountsPage from "./pages/books/charts-of-accounts";
+import JournalsPage from "./pages/books/journals";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 60_000 } },
@@ -55,13 +60,13 @@ const App = () => (
 
             {/* Reports */}
             <Route path="/reports/profit-and-loss" element={<ProfitAndLossPage />} />
-            <Route path="/reports/balance-sheet" element={<Placeholder title="Balance Sheet" breadcrumbs={["Reports", "Balance Sheet"]} />} />
-            <Route path="/reports/cash-flow" element={<Placeholder title="Cash Flow" breadcrumbs={["Reports", "Cash Flow"]} />} />
-            <Route path="/reports/trial-balance" element={<Placeholder title="Trial Balance" breadcrumbs={["Reports", "Trial Balance"]} />} />
+            <Route path="/reports/balance-sheet" element={<BalanceSheetPage />} />
+            <Route path="/reports/cash-flow" element={<CashFlowPage />} />
+            <Route path="/reports/trial-balance" element={<TrialBalancePage />} />
 
             {/* Books */}
-            <Route path="/books/charts-of-accounts" element={<Placeholder title="Charts of Accounts" breadcrumbs={["Books", "Charts of Accounts"]} />} />
-            <Route path="/books/journals" element={<Placeholder title="Journals" breadcrumbs={["Books", "Journals"]} />} />
+            <Route path="/books/charts-of-accounts" element={<ChartsOfAccountsPage />} />
+            <Route path="/books/journals" element={<JournalsPage />} />
 
             <Route path="/transactions/revenue" element={<RevenuePage />} />
             <Route path="/transactions/purchases" element={<PurchasesPage />} />
