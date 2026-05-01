@@ -64,6 +64,16 @@ export default function JournalsPage() {
   const totalCr = filtered.reduce((s, j) => s + j.totalCredit, 0);
   const balanced = Math.abs(totalDr - totalCr) < 1;
 
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const startIdx = (currentPage - 1) * pageSize;
+  const paginated = filtered.slice(startIdx, startIdx + pageSize);
+
+  // Reset to first page when filters change
+  const filterKey = `${year}|${period}|${source}|${search}|${pageSize}`;
+  useMemo(() => { setPage(1); }, [filterKey]);
+
   return (
     <AppShell title="Journals">
       <div className="p-6 space-y-6 max-w-[1600px] w-full mx-auto">
