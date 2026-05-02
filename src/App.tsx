@@ -36,6 +36,12 @@ import CashFlowPage from "./pages/reports/cash-flow";
 import TrialBalancePage from "./pages/reports/trial-balance";
 import ChartsOfAccountsPage from "./pages/books/charts-of-accounts";
 import JournalsPage from "./pages/books/journals";
+import CompanyProfilePage from "./pages/settings/CompanyProfile";
+import FiscalYearsPage from "./pages/settings/FiscalYears";
+import OpeningBalancesPage from "./pages/settings/OpeningBalances";
+import TaxConfigPage from "./pages/settings/TaxConfig";
+import SettingsPlaceholder from "./pages/settings/SettingsPlaceholder";
+import UserSettings from "./pages/settings/UserSettings";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 60_000 } },
@@ -90,7 +96,14 @@ const App = () => (
             <Route path="/taxation/income-taxes" element={<IncomeTaxesPage />} />
             <Route path="/taxation/income-tax" element={<IncomeTaxesPage />} />
             <Route path="/reports" element={<ProfitAndLossPage />} />
-            <Route path="/settings" element={<Placeholder title="Settings" breadcrumbs={["Settings"]} />} />
+            <Route path="/settings" element={<UserSettings />} />
+            <Route path="/settings/org" element={<CompanyProfilePage />} />
+            <Route path="/settings/org/company" element={<CompanyProfilePage />} />
+            <Route path="/settings/org/fiscal-years" element={<FiscalYearsPage />} />
+            <Route path="/settings/org/opening-balances" element={<OpeningBalancesPage />} />
+            <Route path="/settings/org/tax-config" element={<TaxConfigPage />} />
+            <Route path="/settings/org/users" element={<SettingsPlaceholder title="Users & Permissions" />} />
+            <Route path="/settings/org/integrations" element={<SettingsPlaceholder title="Integrations" />} />
             <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
