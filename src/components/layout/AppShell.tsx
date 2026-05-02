@@ -1,15 +1,16 @@
 import { ReactNode } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, Link } from "react-router-dom";
 import {
   LayoutGrid, Building2, UserCircle2, Users,
   Boxes, ShoppingCart, TrendingUp, Receipt as ReceiptIcon,
   Calculator, Wallet, Percent, FileText, Landmark,
   PieChart, Scale, ArrowDownUp, FileSpreadsheet,
-  Network, BookOpen,
+  Network, BookOpen, Settings as SettingsIcon, ChevronsRight,
   ChevronLeft, ChevronRight, Bell, HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
+import { useOrgSettings } from "@/stores/org-settings.store";
 
 type NavRow =
   | { kind: "item"; label: string; to: string; icon: any }
@@ -73,23 +74,33 @@ function SidebarItem({ row }: { row: Extract<NavRow, { kind: "item" }> }) {
 }
 
 export function Sidebar() {
+  const company = useOrgSettings(s => s.company);
   return (
     <aside
       className="hidden md:flex flex-col bg-card shrink-0 border-r border-border h-screen sticky top-0"
       style={{ width: 250 }}
     >
-      {/* Logo header — matches TopBar height */}
-      <div className="h-14 flex items-center gap-2 px-4 border-b border-border shrink-0">
+      {/* Org header — clickable, enters Organisation Settings */}
+      <Link
+        to="/settings/org/company"
+        className="group h-14 flex items-center gap-2 px-4 border-b border-border shrink-0 hover:bg-secondary/60 transition-colors"
+        title="Open Organisation Settings"
+      >
         <img
           src={logo}
           alt="Core Ledger"
           className="h-7 w-auto object-contain"
         />
-        <div className="leading-none flex items-baseline gap-1">
-          <span className="text-[18px] font-bold" style={{ color: "#184F97" }}>Core</span>
-          <span className="text-[18px] font-bold" style={{ color: "#004A7E" }}>Ledger</span>
+        <div className="leading-tight flex-1 min-w-0">
+          <div className="text-[13px] font-semibold text-foreground truncate">
+            {company.name}
+          </div>
+          <div className="text-[10px] text-muted-foreground truncate">
+            Organisation Settings
+          </div>
         </div>
-      </div>
+        <ChevronsRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+      </Link>
 
       {/* Scrollable nav */}
       <nav className="flex-1 overflow-y-auto scrollbar-hidden p-3">
@@ -109,6 +120,11 @@ export function Sidebar() {
           })}
         </div>
       </nav>
+
+      {/* Sticky Settings — bottom of sidebar */}
+      <div className="shrink-0 border-t border-border p-3">
+        <SidebarItem row={{ kind: "item", label: "Settings", to: "/settings", icon: SettingsIcon }} />
+      </div>
     </aside>
   );
 }
