@@ -1,4 +1,9 @@
 /**
+ * 🔌 BACKEND: This entire service is a frontend mock for UI development.
+ * In production, replace each function with an API call to the backend tax
+ * service. The backend is the single source of truth for VAT, WHT, CIT
+ * computations and period filtering.
+ *
  * Shared tax service.
  *
  * Adapts the existing Revenue / Purchase / Expense / Asset mock data into

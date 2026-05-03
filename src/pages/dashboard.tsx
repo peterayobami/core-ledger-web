@@ -1,3 +1,7 @@
+// 🔌 BACKEND: Dashboard KPIs and summaries should come from
+// `GET /api/dashboard?year=` — aggregated server-side for performance.
+// The frontend mock below derives values from individual transaction arrays.
+
 import { useState } from "react";
 import Link from "next/link";
 import { TopBar } from "@/components/layout/TopBar";

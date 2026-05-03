@@ -1,4 +1,5 @@
 import { useRouter } from "next/router";
+import Link from "next/link";
 import { ChevronLeft, ChevronRight, ChevronDown, Bell, HelpCircle, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFiscalYearStore } from "@/stores/fiscal-year.store";
@@ -9,6 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { getRouteTitle } from "./AppShell";
+
+const ORG_SETTINGS_RETURN_KEY = "org-settings-return";
 
 function statusBadge(status: string, isCurrent: boolean) {
   if (isCurrent) return <span className="text-[10px] text-accent font-medium">(Current)</span>;
@@ -55,15 +58,15 @@ export function TopBar({ title, breadcrumbs }: { title?: string; breadcrumbs?: s
 
       {/* Right side: tenant + FY + icons + avatar */}
       <div className="ml-auto flex items-center gap-3">
-        {/* Tenant */}
-        <div className="hidden xl:flex items-center gap-2 rounded-md border border-[var(--cl-border)] px-3 py-1.5 bg-white/60">
+        {/* Tenant — clickable, navigates to Organisation Settings */}
+        <Link href="/settings/org/company" onClick={() => sessionStorage.setItem(ORG_SETTINGS_RETURN_KEY, window.location.pathname)} className="hidden xl:flex items-center gap-2 rounded-md border border-[var(--cl-border)] px-3 py-1.5 bg-white/60 hover:bg-white/80 transition-colors cursor-pointer">
           <div className="h-6 w-6 rounded bg-[var(--cl-primary)] text-white grid place-items-center text-[11px] font-semibold">AC</div>
           <div className="leading-tight">
             <div className="text-xs font-medium text-[var(--cl-text)]">Acme Industries Ltd</div>
             <div className="text-[10px] text-[var(--cl-text-muted)]">Tenant ID: ACM-2025</div>
           </div>
           <ChevronsUpDown className="h-3.5 w-3.5 text-[var(--cl-text-muted)]" />
-        </div>
+        </Link>
 
         {/* FY selector */}
         <DropdownMenu>

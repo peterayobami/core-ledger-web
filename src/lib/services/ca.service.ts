@@ -1,3 +1,8 @@
+// 🔌 BACKEND: This service is a frontend mock. In production, Capital Allowance
+// computations come from `GET /api/capital-allowance/:year` which returns
+// { unrecoupedBF, annualAllowance, twdv, schedule[] }. The backend owns the
+// authoritative CA schedule and TWDV calculations.
+
 import type { CAYear, TaxComputation } from "@/lib/models/ca";
 import { CLASSIFICATIONS, groupColor as _groupColor } from "@/lib/mock-data/ca";
 

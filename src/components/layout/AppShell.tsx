@@ -6,9 +6,11 @@ import {
   Boxes, ShoppingCart, TrendingUp, Receipt,
   Calculator, Wallet, Percent, FileBarChart, Building,
   PieChart, Scale, ArrowDownUp, BookOpenCheck,
-  Network, BookText,
+  Network, BookText, UserCircle, LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const USER_SETTINGS_RETURN_KEY = "user-settings-return";
 
 interface NavItem { label: string; to: string; icon: React.ComponentType<{ size?: string | number; strokeWidth?: string | number; className?: string }> }
 interface NavGroup { label?: string; items: NavItem[] }
@@ -131,6 +133,27 @@ export function Sidebar() {
           ))}
         </div>
       </nav>
+
+      {/* User account — pinned to bottom */}
+      <div className="shrink-0 border-t border-[var(--cl-border)]/70 px-[13px] py-3">
+        <div className="flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm text-[var(--cl-text-muted)]">
+          <Link
+            href="/settings/account/profile"
+            onClick={() => sessionStorage.setItem(USER_SETTINGS_RETURN_KEY, window.location.pathname)}
+            className="flex items-center gap-3 flex-1 min-w-0 hover:text-[var(--cl-primary)] transition-colors duration-150"
+          >
+            <UserCircle size={18} strokeWidth={1.8} className="shrink-0" />
+            <span className="font-medium truncate">John Doe</span>
+          </Link>
+          <button
+            onClick={() => { /* TODO: sign out logic */ }}
+            className="shrink-0 h-7 w-7 grid place-items-center rounded-md hover:bg-[rgba(220,38,38,0.08)] hover:text-red-600 transition-colors"
+            title="Sign Out"
+          >
+            <LogOut size={16} strokeWidth={1.8} />
+          </button>
+        </div>
+      </div>
     </aside>
   );
 }

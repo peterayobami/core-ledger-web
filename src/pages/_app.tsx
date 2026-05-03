@@ -34,15 +34,22 @@ function RouteLoadingBar() {
 }
 
 export default function App({ Component, pageProps }: AppProps) {
+    const router = useRouter();
+    const isStandalone = router.pathname.startsWith("/settings/org") || router.pathname.startsWith("/settings/account");
+
     return (
         <Providers>
             <TooltipProvider>
                 <Toaster />
                 <Sonner />
                 <RouteLoadingBar />
-                <AppShell>
+                {isStandalone ? (
                     <Component {...pageProps} />
-                </AppShell>
+                ) : (
+                    <AppShell>
+                        <Component {...pageProps} />
+                    </AppShell>
+                )}
             </TooltipProvider>
         </Providers>
     );
