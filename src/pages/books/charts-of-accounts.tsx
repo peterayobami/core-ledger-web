@@ -321,8 +321,16 @@ function AccountSidePanel({
     setIsActive(editing?.isActive ?? true);
   }, [editing, open]);
 
-  // Auto-suggest normal balance from type (overridable)
+  // Lock type if editing an account that has children
+  const hasChildren = !!editing && COA_ACCOUNTS.some(a => a.parentCode === editing.code);
+
+  // If a parent is selected, type is inherited (locked)
+  const parentObj = parentCode !== "none" ? COA_ACCOUNTS.find(a => a.code === parentCode) : undefined;
+  const typeLocked = hasChildren || !!parentObj;
+  const effectiveType: AccountType = parentObj ? parentObj.type : type;
+
   function handleTypeChange(t: AccountType) {
+    if (typeLocked) return;
     setType(t);
     if (t === "Liability" || t === "Equity" || t === "Revenue") setNormalBalance("Credit");
     else setNormalBalance("Debit");
