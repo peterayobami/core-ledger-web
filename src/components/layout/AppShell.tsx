@@ -5,9 +5,13 @@ import {
   Boxes, ShoppingCart, TrendingUp, Receipt as ReceiptIcon,
   Calculator, Wallet, Percent, FileText, Landmark,
   PieChart, Scale, ArrowDownUp, FileSpreadsheet,
-  Network, BookOpen, Settings as SettingsIcon, ChevronsRight,
-  ChevronLeft, ChevronRight, Bell, HelpCircle,
+  Network, BookOpen, Settings as SettingsIcon,
+  ChevronLeft, ChevronRight, ChevronDown, Bell, HelpCircle,
 } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 import { useOrgSettings } from "@/stores/org-settings.store";
