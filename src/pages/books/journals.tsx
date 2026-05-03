@@ -189,7 +189,18 @@ export default function JournalsPage() {
                 ))}
               </div>
 
-              {/* Pagination footer */}
+              {/* Period totals (Dr/Cr footer) */}
+              <div className="mt-3 grid grid-cols-12 items-center gap-3 px-3 py-2 rounded-lg bg-secondary/40 border border-border-strong text-[12.5px] font-semibold">
+                <span className="col-span-9 text-right text-muted-foreground">Period Totals</span>
+                <span className="col-span-3 text-right">
+                  <span className="text-muted-foreground mr-2">Dr</span>
+                  <span className="mono">{formatNGN(totalDr)}</span>
+                  <span className="text-muted-foreground mx-2">·</span>
+                  <span className="text-muted-foreground mr-2">Cr</span>
+                  <span className="mono">{formatNGN(totalCr)}</span>
+                </span>
+              </div>
+
               <div className="flex flex-wrap items-center justify-between gap-3 mt-5 pt-4 border-t border-border">
                 <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
                   <span>Rows per page</span>
