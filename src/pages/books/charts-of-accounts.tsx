@@ -343,7 +343,9 @@ function AccountSidePanel({
   function submit() {
     if (!canSave) return;
     onSave({
-      code, name: name.trim(), type, subType: subType.trim(), normalBalance,
+      code, name: name.trim(),
+      type: effectiveType,
+      subType: subType.trim(), normalBalance,
       parentCode: parentCode === "none" ? undefined : parentCode,
       description: description.trim() || undefined,
       isActive,
