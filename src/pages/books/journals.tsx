@@ -66,9 +66,16 @@ export default function JournalsPage() {
     });
   }, [journals, source, search]);
 
+  // 🔌 BACKEND: status counts will come from `GET /api/journals?...&groupBy=status`.
+  const totalEntries = filtered.length;
+  const postedCount = filtered.filter(j => j.status === "Posted").length;
+  const draftCount = filtered.filter(j => j.status === "Draft").length;
+  const unbalancedCount = filtered.filter(j =>
+    j.status === "Posted" && Math.abs(j.totalDebit - j.totalCredit) >= 1).length;
+  const balanced = unbalancedCount === 0;
+
   const totalDr = filtered.reduce((s, j) => s + j.totalDebit, 0);
   const totalCr = filtered.reduce((s, j) => s + j.totalCredit, 0);
-  const balanced = Math.abs(totalDr - totalCr) < 1;
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -78,6 +85,16 @@ export default function JournalsPage() {
 
   // Reset to first page when filters change
   useEffect(() => { setPage(1); }, [year, period, source, search, pageSize]);
+
+  // Monthly volume — count of entries per month, dimmed if outside selected period
+  const yearJournals = useMemo(() => generateJournals(year, "full"), [year]);
+  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const volume = MONTHS.map((label, i) => {
+    const m = i + 1;
+    const count = yearJournals.filter(j => new Date(j.date).getMonth() + 1 === m).length;
+    const inSel = inPeriod(`${year}-${String(m).padStart(2, "0")}-15`, year, period);
+    return { month: label, count, inSel };
+  });
 
   return (
     <AppShell title="Journals">
@@ -102,17 +119,40 @@ export default function JournalsPage() {
 
         {/* KPIs */}
         <ReportKpiStrip>
-          <ReportKpi label="Journal Entries" value={filtered.length.toString()}
-            hint="Posted in period" icon={BookOpen} tone="primary" />
-          <ReportKpi label="Total Debit" value={formatNGN(totalDr)}
-            hint="Sum of all Dr lines" icon={FileText} tone="skyblue" />
-          <ReportKpi label="Total Credit" value={formatNGN(totalCr)}
-            hint="Sum of all Cr lines" icon={FileText} tone="warning" />
-          <ReportKpi label="Balance Check" value={balanced ? "Balanced" : "Imbalanced"}
-            hint={balanced ? "Dr = Cr ✓" : `Δ ${formatNGN(totalDr - totalCr)}`}
+          <ReportKpi label="Total Entries" value={totalEntries.toString()}
+            hint="All entries in period" icon={BookOpen} tone="primary" />
+          <ReportKpi label="Posted" value={postedCount.toString()}
+            hint="Approved & posted" icon={FileCheck2} tone="success" />
+          <ReportKpi label="Draft / Unposted" value={draftCount.toString()}
+            hint="Pending approval" icon={FileClock} tone="warning" />
+          <ReportKpi label="Balanced Check"
+            value={balanced ? "✓ Balanced" : `⚠ ${unbalancedCount} Unbalanced`}
+            hint={balanced ? "Every posted entry: Dr = Cr" : "Posted entries with Dr ≠ Cr"}
             icon={balanced ? ShieldCheck : Scale}
             tone={balanced ? "success" : "danger"} />
         </ReportKpiStrip>
+
+        {/* Monthly volume chart */}
+        <PageCard title="Entry Volume by Month">
+          <div style={{ width: "100%", height: 240 }}>
+            <ResponsiveContainer>
+              <BarChart data={volume} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                <RTooltip
+                  cursor={{ fill: "hsl(var(--secondary))" }}
+                  formatter={(v: number) => [`${v} entries`, "Count"]}
+                />
+                <Bar dataKey="count" radius={[4,4,0,0]}>
+                  {volume.map((v, i) => (
+                    <Cell key={i} fill="hsl(var(--primary))" fillOpacity={v.inSel ? 1 : 0.25} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </PageCard>
 
         {/* Filters */}
         <PageCard>
