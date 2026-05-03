@@ -3,11 +3,13 @@ import { AppShell } from "@/components/layout/AppShell";
 import { transactionsRepository } from "@/lib/repositories/transactions.repository";
 import { formatNGN, formatDate } from "@/lib/utils/format";
 import { TxnKpi, TxnToolbar, TxnPageHeader, YesNoBadge, CategoryChip } from "@/components/transactions/TxnPrimitives";
+import { RevenueFormPanel } from "@/components/transactions/RevenueFormPanel";
 import { Coins, Percent, FileText, Calendar } from "lucide-react";
 
 export default function RevenuePage() {
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
+  const [panelOpen, setPanelOpen] = useState(false);
   const pageSize = 10;
   const all = transactionsRepository.listRevenues();
 
@@ -40,7 +42,7 @@ export default function RevenuePage() {
           <TxnKpi label="Month to Date" icon={Calendar} value={formatNGN(mtd)} sublabel="Current month" />
         </div>
 
-        <TxnToolbar placeholder="Search by description or invoice..." value={q} onChange={(v) => { setQ(v); setPage(1); }} ctaLabel="New Revenue" />
+        <TxnToolbar placeholder="Search by description or invoice..." value={q} onChange={(v) => { setQ(v); setPage(1); }} ctaLabel="New Revenue" onCta={() => setPanelOpen(true)} />
 
         <div className="cl-card border border-border overflow-hidden">
           <div className="overflow-x-auto">
@@ -69,6 +71,7 @@ export default function RevenuePage() {
           <Pager page={page} totalPages={totalPages} setPage={setPage} total={filtered.length} unit="revenues" />
         </div>
       </div>
+      <RevenueFormPanel open={panelOpen} onClose={() => setPanelOpen(false)} onSaved={() => { }} />
     </AppShell>
   );
 }

@@ -3,11 +3,13 @@ import { AppShell } from "@/components/layout/AppShell";
 import { transactionsRepository } from "@/lib/repositories/transactions.repository";
 import { formatNGN, formatDate } from "@/lib/utils/format";
 import { TxnKpi, TxnToolbar, TxnPageHeader, YesNoBadge, CategoryChip } from "@/components/transactions/TxnPrimitives";
+import { ExpenseFormPanel } from "@/components/transactions/ExpenseFormPanel";
 import { Coins, ShieldCheck, ShieldX, Calendar } from "lucide-react";
 
 export default function ExpensesPage() {
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
+  const [panelOpen, setPanelOpen] = useState(false);
   const pageSize = 10;
   const all = transactionsRepository.listExpenses();
 
@@ -40,7 +42,7 @@ export default function ExpensesPage() {
           <TxnKpi label="Month to Date" icon={Calendar} value={formatNGN(mtd)} sublabel="Current month" />
         </div>
 
-        <TxnToolbar placeholder="Search by description or invoice..." value={q} onChange={(v) => { setQ(v); setPage(1); }} ctaLabel="New Expense" />
+        <TxnToolbar placeholder="Search by description or invoice..." value={q} onChange={(v) => { setQ(v); setPage(1); }} ctaLabel="New Expense" onCta={() => setPanelOpen(true)} />
 
         <div className="cl-card border border-border overflow-hidden">
           <div className="overflow-x-auto">
@@ -69,6 +71,7 @@ export default function ExpensesPage() {
           <Pager page={page} totalPages={totalPages} setPage={setPage} total={filtered.length} unit="expenses" />
         </div>
       </div>
+      <ExpenseFormPanel open={panelOpen} onClose={() => setPanelOpen(false)} onSaved={() => { }} />
     </AppShell>
   );
 }

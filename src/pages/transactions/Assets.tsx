@@ -3,12 +3,14 @@ import { AppShell } from "@/components/layout/AppShell";
 import { transactionsRepository } from "@/lib/repositories/transactions.repository";
 import { formatNGN, formatDate } from "@/lib/utils/format";
 import { TxnKpi, TxnToolbar, TxnPageHeader, CategoryChip } from "@/components/transactions/TxnPrimitives";
+import { AssetFormPanel } from "@/components/transactions/AssetFormPanel";
 import { Boxes, Coins, Calendar, Layers, Sparkles } from "lucide-react";
 
 export default function AssetsPage() {
   const [q, setQ] = useState("");
   const all = transactionsRepository.listAssets();
   const [page, setPage] = useState(1);
+  const [panelOpen, setPanelOpen] = useState(false);
   const pageSize = 10;
 
   const filtered = useMemo(() => {
@@ -39,7 +41,7 @@ export default function AssetsPage() {
           <TxnKpi label="Most Recent" icon={Sparkles} value={mostRecent ? formatDate(mostRecent.dateCreated) : "—"} sublabel={mostRecent?.description} tone="warning" />
         </div>
 
-        <TxnToolbar placeholder="Search assets..." value={q} onChange={(v) => { setQ(v); setPage(1); }} ctaLabel="New Asset" />
+        <TxnToolbar placeholder="Search assets..." value={q} onChange={(v) => { setQ(v); setPage(1); }} ctaLabel="New Asset" onCta={() => setPanelOpen(true)} />
 
         <div className="cl-card border border-border overflow-hidden">
           <div className="overflow-x-auto">
@@ -71,6 +73,7 @@ export default function AssetsPage() {
           <Pager page={page} totalPages={totalPages} setPage={setPage} total={filtered.length} unit="assets" />
         </div>
       </div>
+      <AssetFormPanel open={panelOpen} onClose={() => setPanelOpen(false)} onSaved={() => { }} />
     </AppShell>
   );
 }
