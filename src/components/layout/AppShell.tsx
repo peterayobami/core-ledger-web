@@ -78,33 +78,18 @@ function SidebarItem({ row }: { row: Extract<NavRow, { kind: "item" }> }) {
 }
 
 export function Sidebar() {
-  const company = useOrgSettings(s => s.company);
   return (
     <aside
       className="hidden md:flex flex-col bg-card shrink-0 border-r border-border h-screen sticky top-0"
       style={{ width: 250 }}
     >
-      {/* Org header — clickable, enters Organisation Settings */}
-      <Link
-        to="/settings/org/company"
-        className="group h-14 flex items-center gap-2 px-4 border-b border-border shrink-0 hover:bg-secondary/60 transition-colors"
-        title="Open Organisation Settings"
-      >
-        <img
-          src={logo}
-          alt="Core Ledger"
-          className="h-7 w-auto object-contain"
-        />
-        <div className="leading-tight flex-1 min-w-0">
-          <div className="text-[13px] font-semibold text-foreground truncate">
-            {company.name}
-          </div>
-          <div className="text-[10px] text-muted-foreground truncate">
-            Organisation Settings
-          </div>
+      {/* Brand header — Core Ledger */}
+      <div className="h-14 flex items-center gap-2 px-4 border-b border-border shrink-0">
+        <img src={logo} alt="Core Ledger" className="h-7 w-auto object-contain" />
+        <div className="text-[14px] font-semibold text-foreground tracking-tight">
+          Core Ledger
         </div>
-        <ChevronsRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-      </Link>
+      </div>
 
       {/* Scrollable nav */}
       <nav className="flex-1 overflow-y-auto scrollbar-hidden p-3">
@@ -130,6 +115,46 @@ export function Sidebar() {
         <SidebarItem row={{ kind: "item", label: "Settings", to: "/settings", icon: SettingsIcon }} />
       </div>
     </aside>
+  );
+}
+
+function OrgMenu() {
+  const company = useOrgSettings(s => s.company);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="inline-flex items-center gap-2 h-9 px-2.5 rounded-md hover:bg-secondary transition-colors max-w-[260px]">
+        <div className="h-7 w-7 rounded-md bg-primary/10 text-primary grid place-items-center text-[11px] font-semibold shrink-0">
+          {company.name.split(/\s+/).slice(0, 2).map(w => w[0]).join("").toUpperCase()}
+        </div>
+        <div className="leading-tight text-left min-w-0">
+          <div className="text-[13px] font-semibold text-foreground truncate">{company.name}</div>
+          <div className="text-[10px] text-muted-foreground truncate">Organisation</div>
+        </div>
+        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-64">
+        <DropdownMenuLabel className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          Organisation Settings
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/settings/org/company">Company Profile</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/settings/org/fiscal-years">Fiscal Years</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/settings/org/opening-balances">Opening Balances</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/settings/org/tax-config">Tax Configuration</Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/settings">All Settings</Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
