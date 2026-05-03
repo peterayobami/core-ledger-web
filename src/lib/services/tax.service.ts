@@ -348,6 +348,10 @@ export function vatTotals(year: number, period: Period = "full") {
   };
 }
 
+// 🔌 BACKEND: whtTotals().payable → Balance Sheet account 2300 (WHT Payable).
+// whtTotals().receivable → Balance Sheet account 1250 (WHT Receivable), credited against CIT on assessment.
+// 🔌 BACKEND: computeTax().citPayable → Balance Sheet account 2500 (CIT Payable).
+// On payment to FIRS: Dr 2500 CIT Payable / Cr 1100 Cash.
 export function whtTotals(year: number, period: Period = "full") {
   const revs = revenuesIn(year, period);
   const purs = purchasesIn(year, period);
