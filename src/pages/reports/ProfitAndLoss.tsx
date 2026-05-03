@@ -8,7 +8,8 @@ import {
   defaultYear, revenuesIn, purchasesIn, expensesIn,
   depreciationAddbackFor, computeTax, aggregateMonthly,
 } from "@/lib/services/tax.service";
-import { caCapitalAllowanceFor } from "@/lib/services/ca.service";
+// 🔌 BACKEND: GET /api/capital-allowance/:year returns { unrecoupedBF, annualAllowance, twdv }.
+// The P&L reads these values from the CA module — never as inline inputs.
 import { selectOpeningBalance, selectUnrecoupedCABF } from "@/stores/org-settings.store";
 import { formatNGN } from "@/lib/utils/format";
 import {
