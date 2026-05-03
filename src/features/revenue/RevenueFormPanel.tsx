@@ -8,10 +8,16 @@ import { SelectorTrigger, CustomerPicker } from "@/components/cl/SelectorPicker"
 import { api, getCustomer, revenueCategories } from "@/data/store";
 import type { Customer, Revenue } from "@/data/types";
 import { formatNaira } from "@/lib/format";
+import { COA_ACCOUNTS } from "@/lib/services/ledger.service";
+
+// 🔌 BACKEND: Revenue account options come from GET /api/accounts?type=Revenue.
+// coaAccountCode is sent with POST /revenues so the backend journal service
+// knows which account to credit: Dr 1200 Accounts Receivable / Cr {coaAccountCode}.
+const revenueAccounts = COA_ACCOUNTS.filter(a => a.type === "Revenue" && a.isActive && !a.code.endsWith("000"));
 
 interface Props { open: boolean; mode: "create" | "edit"; initial?: Revenue | null; onClose: () => void; onSaved: (r: Revenue) => void; }
-interface FS { description: string; invoiceNumber: string; salesAmount: number; date: string; isTaxableSupply: boolean; customer: Customer | null; categoryId: string | null; isWhtApplicable: boolean; whtRate: number; whtCertificateNumber: string; remarks: string; }
-const empty = (): FS => ({ description: "", invoiceNumber: "", salesAmount: 0, date: "", isTaxableSupply: false, customer: null, categoryId: null, isWhtApplicable: false, whtRate: 0, whtCertificateNumber: "", remarks: "" });
+interface FS { description: string; invoiceNumber: string; salesAmount: number; date: string; isTaxableSupply: boolean; customer: Customer | null; categoryId: string | null; coaAccountCode: string | null; isWhtApplicable: boolean; whtRate: number; whtCertificateNumber: string; remarks: string; }
+const empty = (): FS => ({ description: "", invoiceNumber: "", salesAmount: 0, date: "", isTaxableSupply: false, customer: null, categoryId: null, coaAccountCode: null, isWhtApplicable: false, whtRate: 0, whtCertificateNumber: "", remarks: "" });
 
 export function RevenueFormPanel({ open, mode, initial, onClose, onSaved }: Props) {
     const [s, setS] = React.useState<FS>(empty());
@@ -24,7 +30,7 @@ export function RevenueFormPanel({ open, mode, initial, onClose, onSaved }: Prop
         if (!open) return;
         setSubmitted(false); setServerError(null); setSaving(false);
         if (mode === "edit" && initial) {
-            setS({ description: initial.description, invoiceNumber: initial.invoiceNumber, salesAmount: initial.salesAmount, date: initial.date, isTaxableSupply: initial.isTaxableSupply, customer: getCustomer(initial.customerId) ?? null, categoryId: initial.categoryId ?? null, isWhtApplicable: initial.isWhtApplicable, whtRate: initial.whtRate, whtCertificateNumber: initial.whtCertificateNumber ?? "", remarks: initial.remarks ?? "" });
+            setS({ description: initial.description, invoiceNumber: initial.invoiceNumber, salesAmount: initial.salesAmount, date: initial.date, isTaxableSupply: initial.isTaxableSupply, customer: getCustomer(initial.customerId) ?? null, categoryId: initial.categoryId ?? null, coaAccountCode: initial.coaAccountCode ?? null, isWhtApplicable: initial.isWhtApplicable, whtRate: initial.whtRate, whtCertificateNumber: initial.whtCertificateNumber ?? "", remarks: initial.remarks ?? "" });
         } else setS(empty());
     }, [open, mode, initial]);
 
@@ -52,7 +58,7 @@ export function RevenueFormPanel({ open, mode, initial, onClose, onSaved }: Prop
         if (s.isWhtApplicable && !s.whtRate) return;
         setSaving(true);
         try {
-            const payload = { description: s.description.trim(), invoiceNumber: s.invoiceNumber.trim(), salesAmount: s.salesAmount, date: new Date(s.date).toISOString(), isTaxableSupply: s.isTaxableSupply, customerId: s.customer!.id, categoryId: s.categoryId, isWhtApplicable: s.isWhtApplicable, whtRate: s.whtRate, whtCertificateNumber: s.whtCertificateNumber.trim() || undefined, remarks: s.remarks.trim() || undefined };
+            const payload = { description: s.description.trim(), invoiceNumber: s.invoiceNumber.trim(), salesAmount: s.salesAmount, date: new Date(s.date).toISOString(), isTaxableSupply: s.isTaxableSupply, customerId: s.customer!.id, categoryId: s.categoryId, coaAccountCode: s.coaAccountCode ?? undefined, isWhtApplicable: s.isWhtApplicable, whtRate: s.whtRate, whtCertificateNumber: s.whtCertificateNumber.trim() || undefined, remarks: s.remarks.trim() || undefined };
             const result = mode === "create" ? await api.createRevenue(payload) : await api.updateRevenue(initial!.id, payload);
             onSaved(result);
         } catch (err) { setServerError(err instanceof Error ? err.message : "Could not save revenue."); }
@@ -74,6 +80,12 @@ export function RevenueFormPanel({ open, mode, initial, onClose, onSaved }: Prop
                     <Field label="Sales Amount (₦)" required error={errors.salesAmount}><CurrencyInput value={s.salesAmount} onChange={(v) => update("salesAmount", v)} placeholder="e.g. 2,500,000" error={!!errors.salesAmount} disabled={saving} /></Field>
                     <Field label="Customer" required error={errors.customer}><SelectorTrigger value={s.customer?.name ?? ""} placeholder="Select customer…" onClick={() => setPickerOpen(true)} error={!!errors.customer} /></Field>
                     <Field label="Revenue Category"><ChipSelector options={revenueCategories.map((c) => ({ value: c.id, label: c.name }))} value={s.categoryId} onChange={(v) => update("categoryId", v)} layout="wrap" disabled={saving} /></Field>
+                    <Field label="Revenue Account (GL)" hint="Credit side of the journal entry">
+                        <select value={s.coaAccountCode ?? ""} onChange={(e) => update("coaAccountCode", e.target.value || null)} disabled={saving} className="w-full rounded-md border border-[var(--cl-border)] bg-[var(--cl-surface)] px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[var(--cl-primary)]">
+                            <option value="">Select account…</option>
+                            {revenueAccounts.map(a => <option key={a.code} value={a.code}>{a.code} — {a.name}</option>)}
+                        </select>
+                    </Field>
                     <Field label="Date" required error={errors.date}><DateField value={s.date} onChange={(v) => update("date", v)} max={today} error={!!errors.date} disabled={saving} /></Field>
                     <Field label="Taxable Supply (VAT)">
                         <ChipSelector options={[{ value: "yes", label: "Yes (7.5%)", accent: "success" as const }, { value: "no", label: "No", accent: "danger" as const }]} value={s.isTaxableSupply ? "yes" : "no"} onChange={(v) => update("isTaxableSupply", v === "yes")} layout="inline-2" disabled={saving} />

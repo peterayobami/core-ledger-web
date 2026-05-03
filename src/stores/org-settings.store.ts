@@ -6,11 +6,24 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+export type CompanyType =
+    | "Private Limited (Ltd)"
+    | "Public Limited Company (PLC)"
+    | "Limited Liability Partnership (LLP)"
+    | "Partnership"
+    | "Sole Proprietorship"
+    | "Non-Governmental Organisation (NGO)"
+    | "Other";
+
 export interface CompanyProfile {
     name: string;
-    registrationNumber: string;
+    companyType: CompanyType;
+    registrationNumber: string;   // CAC RC Number
+    tin: string;                  // FIRS Tax Identification Number — required on all tax filings
     industry: string;
     address: string;
+    phone?: string;
+    email?: string;
     fiscalYearStartMonth: number; // 1-12
     logoUrl?: string;
 }
@@ -24,13 +37,16 @@ export interface FiscalYearConfig {
 
 export interface OpeningBalance {
     // Cash & Bank
-    openingCash: number;
+    openingCash: number;          // account 1100
+    // Current Assets
+    accountsReceivable: number;   // account 1200
+    whtReceivable: number;        // account 1250 — WHT credits from customers
     // Equity
-    shareCapital: number;
-    retainedEarningsBF: number;
-    // Other (optional migration)
-    accountsReceivable: number;
-    accountsPayable: number;
+    shareCapital: number;         // account 3100
+    retainedEarningsBF: number;   // account 3200 — closing RE of prior year (negative = accumulated loss)
+    // Current Liabilities
+    accountsPayable: number;      // account 2100
+    // Additional migration balances — free-form COA account + amount
     customRows: Array<{ id: string; accountCode: string; amount: number }>;
 }
 
@@ -67,9 +83,10 @@ export interface OrgSettingsState {
 
 const EMPTY_OB: OpeningBalance = {
     openingCash: 0,
+    accountsReceivable: 0,
+    whtReceivable: 0,
     shareCapital: 0,
     retainedEarningsBF: 0,
-    accountsReceivable: 0,
     accountsPayable: 0,
     customRows: [],
 };
@@ -79,9 +96,13 @@ export const useOrgSettings = create<OrgSettingsState>()(
         (set) => ({
             company: {
                 name: "Acme Industries Ltd",
+                companyType: "Private Limited (Ltd)",
                 registrationNumber: "RC-2025-ACM",
+                tin: "",
                 industry: "Manufacturing",
                 address: "12 Marina Road, Lagos Island, Lagos, Nigeria",
+                phone: "",
+                email: "",
                 fiscalYearStartMonth: 1,
             },
             fiscalYears: [
@@ -92,13 +113,19 @@ export const useOrgSettings = create<OrgSettingsState>()(
             openingBalances: {},
             taxConfig: {
                 vatRate: 7.5,
+                // Rates per FIRS WHT regulations (Finance Acts inclusive).
+                // Resident company rates. Non-resident rates may differ — adjust via Tax Configuration.
                 whtSchedule: [
-                    { category: "Professional services", rate: 10 },
-                    { category: "Construction", rate: 5 },
-                    { category: "Consultancy", rate: 10 },
+                    { category: "Dividends", rate: 10 },
+                    { category: "Interest", rate: 10 },
+                    { category: "Royalties", rate: 10 },
                     { category: "Rent (corporate)", rate: 10 },
                     { category: "Management fees", rate: 10 },
+                    { category: "Directors' fees", rate: 10 },
+                    { category: "Professional services", rate: 5 },
+                    { category: "Consultancy / Technical services", rate: 5 },
                     { category: "Supply of goods", rate: 5 },
+                    { category: "Construction (resident)", rate: 2.5 },
                 ],
                 citClassification: "Auto",
                 unrecoupedCABF: {},

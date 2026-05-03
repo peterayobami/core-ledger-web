@@ -101,6 +101,8 @@ export default function BalanceSheetPage() {
             icon={Wallet} tone={workingCapital >= 0 ? "success" : "danger"} />
         </ReportKpiStrip>
 
+        {missing.length > 0 && <MissingDataBanner items={missing} />}
+
         <BalanceBanner
           balanced={bs.isBalanced}
           imbalance={bs.imbalance}
@@ -108,8 +110,6 @@ export default function BalanceSheetPage() {
             ? "Assets = Liabilities + Equity"
             : "Balance Sheet does not balance"}
         />
-
-        {missing.length > 0 && <MissingDataBanner items={missing} />}
 
         {/* Two donuts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

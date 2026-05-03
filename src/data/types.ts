@@ -45,6 +45,7 @@ export interface Asset {
     datePurchased: string;
     vendorId: string;
     depreciationMethod: DepreciationMethod;
+    coaAccountCode?: string;
     remarks?: string;
     dateCreated: string;
 }
@@ -69,6 +70,7 @@ export interface Purchase {
     isWhtApplicable: boolean;
     whtRate: number;
     whtAmount: number;
+    coaAccountCode?: string;
     remarks?: string;
     dateCreated: string;
 }
@@ -87,6 +89,7 @@ export interface Revenue {
     isWhtApplicable: boolean;
     whtRate: number;
     whtAmount: number;
+    coaAccountCode?: string;
     remarks?: string;
     dateCreated: string;
 }
@@ -106,6 +109,7 @@ export interface Expense {
     isWhtApplicable: boolean;
     whtRate: number;
     whtAmount: number;
+    coaAccountCode?: string;
     remarks?: string;
     dateCreated: string;
 }

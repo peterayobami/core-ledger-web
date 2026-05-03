@@ -8,10 +8,16 @@ import { SelectorTrigger, VendorPicker } from "@/components/cl/SelectorPicker";
 import { api, getVendor } from "@/data/store";
 import type { Purchase, Vendor } from "@/data/types";
 import { formatNaira } from "@/lib/format";
+import { COA_ACCOUNTS } from "@/lib/services/ledger.service";
+
+// 🔌 BACKEND: Cost account options come from GET /api/accounts?type=CostOfSales.
+// coaAccountCode is sent with POST /purchases so the backend journal service
+// knows which account to debit: Dr {coaAccountCode} / Cr 2100 Accounts Payable.
+const costAccounts = COA_ACCOUNTS.filter(a => a.type === "CostOfSales" && a.isActive && !a.code.endsWith("000"));
 
 interface Props { open: boolean; mode: "create" | "edit"; initial?: Purchase | null; onClose: () => void; onSaved: (p: Purchase) => void; }
-interface FS { description: string; invoiceNumber: string; cost: number; datePurchased: string; isVatApplicable: boolean; vendor: Vendor | null; isWhtApplicable: boolean; whtRate: number; remarks: string; }
-const empty = (): FS => ({ description: "", invoiceNumber: "", cost: 0, datePurchased: "", isVatApplicable: false, vendor: null, isWhtApplicable: false, whtRate: 0, remarks: "" });
+interface FS { description: string; invoiceNumber: string; cost: number; datePurchased: string; isVatApplicable: boolean; vendor: Vendor | null; coaAccountCode: string | null; isWhtApplicable: boolean; whtRate: number; remarks: string; }
+const empty = (): FS => ({ description: "", invoiceNumber: "", cost: 0, datePurchased: "", isVatApplicable: false, vendor: null, coaAccountCode: null, isWhtApplicable: false, whtRate: 0, remarks: "" });
 
 export function PurchaseFormPanel({ open, mode, initial, onClose, onSaved }: Props) {
     const [s, setS] = React.useState<FS>(empty());
@@ -24,7 +30,7 @@ export function PurchaseFormPanel({ open, mode, initial, onClose, onSaved }: Pro
         if (!open) return;
         setSubmitted(false); setServerError(null); setSaving(false);
         if (mode === "edit" && initial) {
-            setS({ description: initial.description, invoiceNumber: initial.invoiceNumber, cost: initial.cost, datePurchased: initial.datePurchased, isVatApplicable: initial.isVatApplicable, vendor: getVendor(initial.vendorId) ?? null, isWhtApplicable: initial.isWhtApplicable, whtRate: initial.whtRate, remarks: initial.remarks ?? "" });
+            setS({ description: initial.description, invoiceNumber: initial.invoiceNumber, cost: initial.cost, datePurchased: initial.datePurchased, isVatApplicable: initial.isVatApplicable, vendor: getVendor(initial.vendorId) ?? null, coaAccountCode: initial.coaAccountCode ?? null, isWhtApplicable: initial.isWhtApplicable, whtRate: initial.whtRate, remarks: initial.remarks ?? "" });
         } else setS(empty());
     }, [open, mode, initial]);
 
@@ -52,7 +58,7 @@ export function PurchaseFormPanel({ open, mode, initial, onClose, onSaved }: Pro
         if (s.isWhtApplicable && !s.whtRate) return;
         setSaving(true);
         try {
-            const payload = { description: s.description.trim(), invoiceNumber: s.invoiceNumber.trim(), cost: s.cost, datePurchased: new Date(s.datePurchased).toISOString(), isVatApplicable: s.isVatApplicable, vendorId: s.vendor!.id, isWhtApplicable: s.isWhtApplicable, whtRate: s.whtRate, remarks: s.remarks.trim() || undefined };
+            const payload = { description: s.description.trim(), invoiceNumber: s.invoiceNumber.trim(), cost: s.cost, datePurchased: new Date(s.datePurchased).toISOString(), isVatApplicable: s.isVatApplicable, vendorId: s.vendor!.id, coaAccountCode: s.coaAccountCode ?? undefined, isWhtApplicable: s.isWhtApplicable, whtRate: s.whtRate, remarks: s.remarks.trim() || undefined };
             const result = mode === "create" ? await api.createPurchase(payload) : await api.updatePurchase(initial!.id, payload);
             onSaved(result);
         } catch (err) { setServerError(err instanceof Error ? err.message : "Could not save purchase."); }
@@ -73,6 +79,12 @@ export function PurchaseFormPanel({ open, mode, initial, onClose, onSaved }: Pro
                     <Field label="Invoice Number" required error={errors.invoiceNumber}><TextInput value={s.invoiceNumber} onChange={(e) => update("invoiceNumber", e.target.value)} placeholder="INV-2025-0001" mono error={!!errors.invoiceNumber} disabled={saving} /></Field>
                     <Field label="Cost (₦)" required error={errors.cost}><CurrencyInput value={s.cost} onChange={(v) => update("cost", v)} placeholder="e.g. 250,000" error={!!errors.cost} disabled={saving} /></Field>
                     <Field label="Vendor" required error={errors.vendor}><SelectorTrigger value={s.vendor?.name ?? ""} placeholder="Select vendor…" onClick={() => setPickerOpen(true)} error={!!errors.vendor} /></Field>
+                    <Field label="Cost Account (GL)" hint="Debit side of the journal entry">
+                        <select value={s.coaAccountCode ?? ""} onChange={(e) => update("coaAccountCode", e.target.value || null)} disabled={saving} className="w-full rounded-md border border-[var(--cl-border)] bg-[var(--cl-surface)] px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[var(--cl-primary)]">
+                            <option value="">Select account…</option>
+                            {costAccounts.map(a => <option key={a.code} value={a.code}>{a.code} — {a.name}</option>)}
+                        </select>
+                    </Field>
                     <Field label="Date Purchased" required error={errors.datePurchased}><DateField value={s.datePurchased} onChange={(v) => update("datePurchased", v)} max={today} error={!!errors.datePurchased} disabled={saving} /></Field>
                     <Field label="VAT Applicable">
                         <ChipSelector options={[{ value: "yes", label: "Yes (7.5%)", accent: "success" as const }, { value: "no", label: "No", accent: "danger" as const }]} value={s.isVatApplicable ? "yes" : "no"} onChange={(v) => update("isVatApplicable", v === "yes")} layout="inline-2" disabled={saving} />

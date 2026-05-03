@@ -92,6 +92,19 @@ function OverviewTab() {
         <p className="text-sm text-muted-foreground mt-1">Financial overview for FY {fiscalYear}.</p>
       </div>
 
+      {/*
+        TODO: Insert Balance Sheet snapshot card here — three figures side by side:
+          Total Assets | Total Liabilities | Total Equity
+          Source: computeBalanceSheet(fiscalYear, openingBalance) from ledger.service.
+          🔌 BACKEND: Read from GET /api/dashboard/summary → balanceSheet { totalAssets, totalLiabilities, totalEquity }
+      */}
+      {/*
+        TODO: Insert Cash Position chip here — single figure showing closing cash balance.
+          Source: computeCashFlow(fiscalYear, cfInputs).closingCash from ledger.service.
+          🔌 BACKEND: Read from GET /api/dashboard/summary → cashFlow { closingCash }
+          Place this chip inline with or immediately below the Balance Sheet snapshot card.
+      */}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <KpiCard label="Total Revenue" value={formatNGN(totalRev)} sublabel={`Period to date · FY ${fiscalYear}`} />
         <KpiCard label="Total Expenses" value={formatNGN(totalExp)} sublabel="COGS + operating expenses" />

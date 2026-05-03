@@ -7,6 +7,12 @@ import { ChipSelector } from "@/components/cl/Chip";
 import { SelectorTrigger, VendorPicker } from "@/components/cl/SelectorPicker";
 import { api, getVendor, classifications as classList } from "@/data/store";
 import type { Asset, DepreciationMethod, Vendor } from "@/data/types";
+import { COA_ACCOUNTS } from "@/lib/services/ledger.service";
+
+// 🔌 BACKEND: Asset account options come from GET /api/accounts?type=Asset&subType=Non-current+Asset.
+// coaAccountCode is sent with POST /assets so the backend journal service
+// knows which account to debit on capitalisation: Dr {coaAccountCode} / Cr 2100 Accounts Payable.
+const assetAccounts = COA_ACCOUNTS.filter(a => a.type === "Asset" && a.subType.toLowerCase().includes("non-current") && a.isActive && !a.code.endsWith("000"));
 
 interface AssetFormPanelProps {
     open: boolean;
@@ -23,11 +29,12 @@ interface FormState {
     vendor: Vendor | null;
     datePurchased: string;
     depreciationMethod: DepreciationMethod;
+    coaAccountCode: string | null;
     remarks: string;
 }
 
 function emptyState(): FormState {
-    return { description: "", cost: 0, classificationId: null, vendor: null, datePurchased: "", depreciationMethod: "StraightLine", remarks: "" };
+    return { description: "", cost: 0, classificationId: null, vendor: null, datePurchased: "", depreciationMethod: "StraightLine", coaAccountCode: null, remarks: "" };
 }
 
 export function AssetFormPanel({ open, mode, initial, onClose, onSaved }: AssetFormPanelProps) {
@@ -41,7 +48,7 @@ export function AssetFormPanel({ open, mode, initial, onClose, onSaved }: AssetF
         if (!open) return;
         setSubmitted(false); setServerError(null); setSaving(false);
         if (mode === "edit" && initial) {
-            setState({ description: initial.description, cost: initial.cost, classificationId: initial.classificationId, vendor: getVendor(initial.vendorId) ?? null, datePurchased: initial.datePurchased, depreciationMethod: initial.depreciationMethod, remarks: initial.remarks ?? "" });
+            setState({ description: initial.description, cost: initial.cost, classificationId: initial.classificationId, vendor: getVendor(initial.vendorId) ?? null, datePurchased: initial.datePurchased, depreciationMethod: initial.depreciationMethod, coaAccountCode: initial.coaAccountCode ?? null, remarks: initial.remarks ?? "" });
         } else { setState(emptyState()); }
     }, [open, mode, initial]);
 
@@ -70,7 +77,7 @@ export function AssetFormPanel({ open, mode, initial, onClose, onSaved }: AssetF
         if (Object.keys(e).length) return;
         setSaving(true);
         try {
-            const payload = { description: state.description.trim(), cost: state.cost, classificationId: state.classificationId!, vendorId: state.vendor!.id, datePurchased: new Date(state.datePurchased).toISOString(), depreciationMethod: state.depreciationMethod, remarks: state.remarks.trim() || undefined };
+            const payload = { description: state.description.trim(), cost: state.cost, classificationId: state.classificationId!, vendorId: state.vendor!.id, datePurchased: new Date(state.datePurchased).toISOString(), depreciationMethod: state.depreciationMethod, coaAccountCode: state.coaAccountCode ?? undefined, remarks: state.remarks.trim() || undefined };
             const result = mode === "create" ? await api.createAsset(payload) : await api.updateAsset(initial!.id, payload);
             onSaved(result);
         } catch (err) { setServerError(err instanceof Error ? err.message : "Could not save asset."); }
@@ -102,6 +109,12 @@ export function AssetFormPanel({ open, mode, initial, onClose, onSaved }: AssetF
                     </Field>
                     <Field label="Date Purchased" required error={errors.datePurchased}>
                         <DateField value={state.datePurchased} onChange={(v) => update("datePurchased", v)} max={today} error={!!errors.datePurchased} disabled={saving} />
+                    </Field>
+                    <Field label="Asset Account (GL)" hint="Fixed asset account to debit on capitalisation">
+                        <select value={state.coaAccountCode ?? ""} onChange={(e) => update("coaAccountCode", e.target.value || null)} disabled={saving} className="w-full rounded-md border border-[var(--cl-border)] bg-[var(--cl-surface)] px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[var(--cl-primary)]">
+                            <option value="">Select account…</option>
+                            {assetAccounts.map(a => <option key={a.code} value={a.code}>{a.code} — {a.name}</option>)}
+                        </select>
                     </Field>
                     <Field label="Depreciation Method" required>
                         <ChipSelector options={[{ value: "StraightLine" as const, label: "Straight Line" }, { value: "ReducingBalance" as const, label: "Reducing Balance" }]} value={state.depreciationMethod} onChange={(v) => update("depreciationMethod", v)} layout="inline-2" disabled={saving} />

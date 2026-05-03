@@ -282,6 +282,12 @@ export function bandFor(grossIncome: number): { band: CITBand; rate: number } {
     return { band: "Large", rate: 30 };
 }
 
+// 🔌 BACKEND: computeTax() → Balance Sheet account linkage:
+//   computeTax().citPayable → Current Liability — account 2500 CIT Payable.
+//     Posted as a liability when the tax computation is finalised for the year.
+//     Cleared by journal: Dr 2500 CIT Payable / Cr 1100 Cash (on payment to FIRS).
+//   computeTax().developmentLevy → also a Current Liability (can share account 2500
+//     or use a dedicated sub-account). Remitted alongside CIT.
 export function computeTax(params: {
     grossIncome: number;
     costOfSales: number;
@@ -330,6 +336,11 @@ export function expensesIn(year: number, period: Period = "full"): DerivedExpens
     return EXPENSES.map(deriveExpense).filter(e => inPeriod(e.date, year, period));
 }
 
+// 🔌 BACKEND: vatTotals().netVat → Balance Sheet account linkage:
+//   If netVat > 0 (Output VAT > Input VAT): Current Liability — account 2200 VAT Payable.
+//   If netVat < 0 (Input VAT > Output VAT): Current Asset — account 1260 VAT Recoverable.
+// The net VAT position is cleared when the VAT return is filed and settlement journal is posted:
+//   Dr 2200 VAT Payable / Cr 1100 Cash (when paying FIRS).
 export function vatTotals(year: number, period: Period = "full") {
     const revs = revenuesIn(year, period);
     const purs = purchasesIn(year, period);
@@ -355,6 +366,12 @@ export function vatTotals(year: number, period: Period = "full") {
     };
 }
 
+// 🔌 BACKEND: whtTotals() → Balance Sheet account linkage:
+//   whtTotals().receivable → Current Asset — account 1250 WHT Receivable.
+//     This is WHT deducted by customers from payments to us; credited against CIT on assessment.
+//   whtTotals().payable → Current Liability — account 2300 WHT Payable.
+//     This is WHT we deducted from vendor/supplier payments; remitted to FIRS monthly.
+//     Cleared by journal: Dr 2300 WHT Payable / Cr 1100 Cash (on remittance to FIRS).
 export function whtTotals(year: number, period: Period = "full") {
     const revs = revenuesIn(year, period);
     const purs = purchasesIn(year, period);

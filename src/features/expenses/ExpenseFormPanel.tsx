@@ -8,10 +8,16 @@ import { SelectorTrigger, VendorPicker } from "@/components/cl/SelectorPicker";
 import { api, getVendor, expenseCategories } from "@/data/store";
 import type { Expense, Vendor } from "@/data/types";
 import { formatNaira } from "@/lib/format";
+import { COA_ACCOUNTS } from "@/lib/services/ledger.service";
+
+// 🔌 BACKEND: Expense account options come from GET /api/accounts?type=Expense.
+// coaAccountCode is sent with POST /expenses so the backend journal service
+// knows which account to debit: Dr {coaAccountCode} / Cr 2100 Accounts Payable.
+const expenseAccounts = COA_ACCOUNTS.filter(a => a.type === "Expense" && a.isActive && !a.code.endsWith("000"));
 
 interface Props { open: boolean; mode: "create" | "edit"; initial?: Expense | null; onClose: () => void; onSaved: (e: Expense) => void; }
-interface FS { description: string; invoiceNumber: string; cost: number; date: string; isTaxDeductible: boolean; nonDeductibleReason: string; isVatApplicable: boolean; supplier: Vendor | null; categoryId: string | null; isWhtApplicable: boolean; whtRate: number; remarks: string; }
-const empty = (): FS => ({ description: "", invoiceNumber: "", cost: 0, date: "", isTaxDeductible: true, nonDeductibleReason: "", isVatApplicable: false, supplier: null, categoryId: null, isWhtApplicable: false, whtRate: 0, remarks: "" });
+interface FS { description: string; invoiceNumber: string; cost: number; date: string; isTaxDeductible: boolean; nonDeductibleReason: string; isVatApplicable: boolean; supplier: Vendor | null; categoryId: string | null; coaAccountCode: string | null; isWhtApplicable: boolean; whtRate: number; remarks: string; }
+const empty = (): FS => ({ description: "", invoiceNumber: "", cost: 0, date: "", isTaxDeductible: true, nonDeductibleReason: "", isVatApplicable: false, supplier: null, categoryId: null, coaAccountCode: null, isWhtApplicable: false, whtRate: 0, remarks: "" });
 
 export function ExpenseFormPanel({ open, mode, initial, onClose, onSaved }: Props) {
     const [s, setS] = React.useState<FS>(empty());
@@ -24,7 +30,7 @@ export function ExpenseFormPanel({ open, mode, initial, onClose, onSaved }: Prop
         if (!open) return;
         setSubmitted(false); setServerError(null); setSaving(false);
         if (mode === "edit" && initial) {
-            setS({ description: initial.description, invoiceNumber: initial.invoiceNumber, cost: initial.cost, date: initial.date, isTaxDeductible: initial.isTaxDeductible, nonDeductibleReason: initial.nonDeductibleReason ?? "", isVatApplicable: initial.isVatApplicable, supplier: getVendor(initial.supplierId) ?? null, categoryId: initial.categoryId, isWhtApplicable: initial.isWhtApplicable, whtRate: initial.whtRate, remarks: initial.remarks ?? "" });
+            setS({ description: initial.description, invoiceNumber: initial.invoiceNumber, cost: initial.cost, date: initial.date, isTaxDeductible: initial.isTaxDeductible, nonDeductibleReason: initial.nonDeductibleReason ?? "", isVatApplicable: initial.isVatApplicable, supplier: getVendor(initial.supplierId) ?? null, categoryId: initial.categoryId, coaAccountCode: initial.coaAccountCode ?? null, isWhtApplicable: initial.isWhtApplicable, whtRate: initial.whtRate, remarks: initial.remarks ?? "" });
         } else setS(empty());
     }, [open, mode, initial]);
 
@@ -55,7 +61,7 @@ export function ExpenseFormPanel({ open, mode, initial, onClose, onSaved }: Prop
         if (s.isWhtApplicable && !s.whtRate) return;
         setSaving(true);
         try {
-            const payload = { description: s.description.trim(), invoiceNumber: s.invoiceNumber.trim(), cost: s.cost, date: new Date(s.date).toISOString(), isTaxDeductible: s.isTaxDeductible, nonDeductibleReason: s.isTaxDeductible ? undefined : s.nonDeductibleReason.trim(), isVatApplicable: s.isVatApplicable, supplierId: s.supplier!.id, categoryId: s.categoryId!, isWhtApplicable: s.isWhtApplicable, whtRate: s.whtRate, remarks: s.remarks.trim() || undefined };
+            const payload = { description: s.description.trim(), invoiceNumber: s.invoiceNumber.trim(), cost: s.cost, date: new Date(s.date).toISOString(), isTaxDeductible: s.isTaxDeductible, nonDeductibleReason: s.isTaxDeductible ? undefined : s.nonDeductibleReason.trim(), isVatApplicable: s.isVatApplicable, supplierId: s.supplier!.id, categoryId: s.categoryId!, coaAccountCode: s.coaAccountCode ?? undefined, isWhtApplicable: s.isWhtApplicable, whtRate: s.whtRate, remarks: s.remarks.trim() || undefined };
             const result = mode === "create" ? await api.createExpense(payload) : await api.updateExpense(initial!.id, payload);
             onSaved(result);
         } catch (err) { setServerError(err instanceof Error ? err.message : "Could not save expense."); }
@@ -77,6 +83,12 @@ export function ExpenseFormPanel({ open, mode, initial, onClose, onSaved }: Prop
                     <Field label="Cost (₦)" required error={errors.cost}><CurrencyInput value={s.cost} onChange={(v) => update("cost", v)} placeholder="e.g. 1,200,000" error={!!errors.cost} disabled={saving} /></Field>
                     <Field label="Supplier" required error={errors.supplier}><SelectorTrigger value={s.supplier?.name ?? ""} placeholder="Select supplier…" onClick={() => setPickerOpen(true)} error={!!errors.supplier} /></Field>
                     <Field label="Expense Category" required error={errors.categoryId}><ChipSelector options={expenseCategories.map((c) => ({ value: c.id, label: c.name }))} value={s.categoryId} onChange={(v) => update("categoryId", v)} layout="wrap" disabled={saving} /></Field>
+                    <Field label="Expense Account (GL)" hint="Debit side of the journal entry">
+                        <select value={s.coaAccountCode ?? ""} onChange={(e) => update("coaAccountCode", e.target.value || null)} disabled={saving} className="w-full rounded-md border border-[var(--cl-border)] bg-[var(--cl-surface)] px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[var(--cl-primary)]">
+                            <option value="">Select account…</option>
+                            {expenseAccounts.map(a => <option key={a.code} value={a.code}>{a.code} — {a.name}</option>)}
+                        </select>
+                    </Field>
                     <Field label="Date" required error={errors.date}><DateField value={s.date} onChange={(v) => update("date", v)} max={today} error={!!errors.date} disabled={saving} /></Field>
                     <Field label="Tax Deductible">
                         <ChipSelector options={[{ value: "yes", label: "Yes", accent: "success" as const }, { value: "no", label: "No", accent: "danger" as const }]} value={s.isTaxDeductible ? "yes" : "no"} onChange={(v) => update("isTaxDeductible", v === "yes")} layout="inline-2" disabled={saving} />
