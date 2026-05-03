@@ -35,7 +35,7 @@ export default function ProfitAndLossPage() {
   // and the Capital Allowance module — never accepted as inline inputs here.
   const ob = selectOpeningBalance(year);
   const unrecoupedCABF = selectUnrecoupedCABF(year);
-  const annualAllowance = caCapitalAllowanceFor(year);
+  const annualAllowance = 0; // 🔌 BACKEND: GET /api/capital-allowance/:year → annualAllowance
   const retainedEarningsBF = ob.retainedEarningsBF;
 
   const data = useMemo(() => {
