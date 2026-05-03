@@ -162,7 +162,7 @@ export function AppTopBar({ title }: { title?: string }) {
   const navigate = useNavigate();
   return (
     <header className="sticky top-0 z-30 h-14 bg-card border-b border-border flex items-center px-4 gap-3 shrink-0">
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 shrink-0">
         <button
           onClick={() => navigate(-1)}
           className="h-8 w-8 grid place-items-center rounded-md text-muted-foreground hover:bg-secondary"
@@ -178,10 +178,12 @@ export function AppTopBar({ title }: { title?: string }) {
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
-      <h1 className="flex-1 text-center text-[15px] font-semibold text-foreground truncate">
+      <OrgMenu />
+      <div className="h-6 w-px bg-border shrink-0" />
+      <h1 className="flex-1 text-left text-[15px] font-semibold text-foreground truncate">
         {title ?? "Core Ledger"}
       </h1>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 shrink-0">
         <button className="h-8 w-8 grid place-items-center rounded-md text-muted-foreground hover:bg-secondary">
           <Bell className="h-4 w-4" />
         </button>
