@@ -14,6 +14,8 @@ export interface AssetItem {
   datePurchased: string; // ISO
   classification: AssetClassification;
   remarks?: string;
+  /** 🔌 BACKEND: COA account code (1500-series Non-current Asset) the asset is capitalised to. */
+  coaAccountCode?: string;
 }
 
 export interface PurchaseItem {
@@ -25,6 +27,8 @@ export interface PurchaseItem {
   cost: number;
   vat: boolean;
   whtPct?: number; // null/0 means no
+  /** 🔌 BACKEND: COA Cost-of-Sales account (5xxx) debited on journal posting. */
+  coaAccountCode?: string;
 }
 
 export interface RevenueItem {
@@ -36,6 +40,8 @@ export interface RevenueItem {
   category: string;
   sales: number;
   vat: boolean;
+  /** 🔌 BACKEND: COA Revenue account (4xxx) credited on journal posting. */
+  coaAccountCode?: string;
 }
 
 export interface ExpenseItem {
@@ -47,4 +53,6 @@ export interface ExpenseItem {
   category: string;
   cost: number;
   deductible: boolean;
+  /** 🔌 BACKEND: COA Expense account (6xxx) debited on journal posting. */
+  coaAccountCode?: string;
 }

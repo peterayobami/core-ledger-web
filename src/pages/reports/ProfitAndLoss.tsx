@@ -2,11 +2,15 @@ import { useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { ReportKpi, ReportKpiStrip, PageCard, StatementRow, SectionHeading }
   from "@/components/reports/ReportPrimitives";
+import { MissingDataBanner, type MissingItem } from "@/components/reports/MissingDataBanner";
 import { YearSelect } from "@/components/reports/PeriodFilter";
 import {
   defaultYear, revenuesIn, purchasesIn, expensesIn,
   depreciationAddbackFor, computeTax, aggregateMonthly,
 } from "@/lib/services/tax.service";
+// 🔌 BACKEND: GET /api/capital-allowance/:year returns { unrecoupedBF, annualAllowance, twdv }.
+// The P&L reads these values from the CA module — never as inline inputs.
+import { selectOpeningBalance, selectUnrecoupedCABF } from "@/stores/org-settings.store";
 import { formatNGN } from "@/lib/utils/format";
 import {
   TrendingUp, BadgeDollarSign, Activity, Receipt, Info, Printer,
@@ -25,10 +29,14 @@ const NEG = (n: number) => `(${formatNGN(Math.abs(n))})`;
 
 export default function ProfitAndLossPage() {
   const [year, setYear] = useState<number>(defaultYear());
-  const [unrecoupedCABF, setUnrecoupedCABF] = useState(0);
-  const [annualAllowance, setAnnualAllowance] = useState(0);
-  const [retainedEarningsBF, setRetainedEarningsBF] = useState(0);
   const [showWorkings, setShowWorkings] = useState(false);
+
+  // 🔌 BACKEND: All brought-forward values are read from Organisation Settings
+  // and the Capital Allowance module — never accepted as inline inputs here.
+  const ob = selectOpeningBalance(year);
+  const unrecoupedCABF = selectUnrecoupedCABF(year);
+  const annualAllowance = 0; // 🔌 BACKEND: GET /api/capital-allowance/:year → annualAllowance
+  const retainedEarningsBF = ob.retainedEarningsBF;
 
   const data = useMemo(() => {
     const revs = revenuesIn(year);
@@ -54,6 +62,9 @@ export default function ProfitAndLossPage() {
     });
 
     const netProfitAfterTax = netProfitBeforeTax - t.citPayable - t.developmentLevy;
+    // 🔌 BACKEND: retainedEarningsCF is the closing Retained Earnings balance (account 3200).
+    // The Balance Sheet reads this same figure from the trial balance — never recompute it
+    // independently. Both pages share one source of truth: the posted ledger balance of 3200.
     const retainedEarningsCF = netProfitAfterTax + retainedEarningsBF;
 
     return {
@@ -87,6 +98,10 @@ export default function ProfitAndLossPage() {
 
   const PIE = ["#184F97","#00A067","#F47727","#7B2CBF","#0EA5E9","#FC5A5A","#0F766E","#9333EA"];
 
+  const missing: MissingItem[] = [];
+  if (retainedEarningsBF === 0)
+    missing.push({ field: `Retained Earnings (brought forward) for FY${year} is not set.` });
+
   return (
     <AppShell title="Profit and Loss">
       <div className="p-6 space-y-6 max-w-[1600px] w-full mx-auto">
@@ -112,6 +127,8 @@ export default function ProfitAndLossPage() {
             hint={`${data.band} company · ${data.citRate}% rate`} icon={Receipt} tone="purple" />
         </ReportKpiStrip>
 
+        {missing.length > 0 && <MissingDataBanner items={missing} />}
+
         {/* Revenue vs Expenses — full row */}
         <PageCard title="Revenue vs. Expenses (Monthly)">
           <div style={{ width: "100%", height: 320 }}>
@@ -131,7 +148,6 @@ export default function ProfitAndLossPage() {
           </div>
         </PageCard>
 
-        {/* Profit Breakdown (≈70%) + Expense Breakdown by Category (≈30%) — share a row */}
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
           <PageCard title="Profit Breakdown" className="lg:col-span-7">
             <div style={{ width: "100%", height: 360 }}>
@@ -218,7 +234,7 @@ export default function ProfitAndLossPage() {
           />
           <StatementRow label="Net Margin" value={`${data.netMarginPct.toFixed(1)}%`} muted />
 
-          {/* Workings */}
+          {/* Workings (read-only) */}
           <Collapsible open={showWorkings} onOpenChange={setShowWorkings}>
             <CollapsibleTrigger className="mt-4 inline-flex items-center gap-2 text-[12px] font-medium text-primary hover:underline">
               <Info className="h-3.5 w-3.5" />
@@ -229,21 +245,19 @@ export default function ProfitAndLossPage() {
                 <SectionHeading>Tax Computation Inputs</SectionHeading>
                 <StatementRow label="Depreciation Add-back" value={formatNGN(data.depreciationAddback)} />
                 <StatementRow label="Adjusted Profit" value={formatNGN(data.adjustedProfit)} bold />
-
-                <div className="flex items-center justify-between py-1.5">
-                  <span className="text-[13px]">Unrecouped CA B/F</span>
-                  <NumInput value={unrecoupedCABF} onChange={setUnrecoupedCABF} />
-                </div>
-                <div className="flex items-center justify-between py-1.5">
-                  <span className="text-[13px]">Annual Allowance (this year)</span>
-                  <NumInput value={annualAllowance} onChange={setAnnualAllowance} />
-                </div>
-
+                <StatementRow label="Unrecouped CA B/F"
+                  value={unrecoupedCABF === 0 ? "—" : formatNGN(unrecoupedCABF)} muted />
+                <StatementRow label="Annual Allowance (this year)"
+                  value={annualAllowance === 0 ? "—" : formatNGN(annualAllowance)} muted />
                 <StatementRow label="Total CA Available" value={formatNGN(data.totalCAAvailable)} />
                 <StatementRow label="CA Relieved" value={NEG(data.caRelieved)} negative />
                 <StatementRow label="Unrecouped CA C/F" value={formatNGN(data.unrecoupedCF)} />
                 <StatementRow label="Assessable Income" value={formatNGN(data.assessableIncome)} bold />
                 <StatementRow label="CIT Band" value={data.band} muted />
+                <p className="text-[11px] text-muted-foreground mt-2">
+                  CA values are sourced from the Capital Allowance module.
+                  Retained Earnings B/F comes from Organisation Settings → Opening Balances.
+                </p>
               </div>
             </CollapsibleContent>
           </Collapsible>
@@ -261,10 +275,8 @@ export default function ProfitAndLossPage() {
             large total
           />
 
-          <div className="flex items-center justify-between py-1.5 mt-2">
-            <span className="text-[13px]">Retained Earnings B/F</span>
-            <NumInput value={retainedEarningsBF} onChange={setRetainedEarningsBF} />
-          </div>
+          <StatementRow label="Retained Earnings B/F"
+            value={retainedEarningsBF === 0 ? "—" : formatNGN(retainedEarningsBF)} muted />
           <StatementRow
             label="Retained Earnings Carried Forward"
             value={data.retainedEarningsCF >= 0 ? formatNGN(data.retainedEarningsCF) : NEG(data.retainedEarningsCF)}
@@ -275,17 +287,5 @@ export default function ProfitAndLossPage() {
 
       </div>
     </AppShell>
-  );
-}
-
-function NumInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  return (
-    <input
-      type="number"
-      value={value === 0 ? "" : value}
-      placeholder="0"
-      onChange={(e) => onChange(Number(e.target.value) || 0)}
-      className="mono w-40 text-right border-0 border-b border-border bg-transparent focus:outline-none focus:border-primary text-[13px] py-1"
-    />
   );
 }

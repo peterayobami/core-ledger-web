@@ -1,4 +1,8 @@
-﻿import type { CAYear, TaxComputation } from "@/lib/models/ca";
+﻿// 🔌 BACKEND: Capital Allowance (Annual Allowance, TWDV) is a TAX concept used for CIT computation.
+// Accounting depreciation (used in Cash Flow and Balance Sheet NBV) is computed separately
+// from each asset's depreciationMethod and useful life. These two schedules are independent.
+// The Balance Sheet must NEVER use TWDV as NBV. The backend must maintain both schedules.
+import type { CAYear, TaxComputation } from "@/lib/models/ca";
 import { CLASSIFICATIONS, groupColor as _groupColor } from "@/lib/mock-data/ca";
 
 export function formatNGN(n: number, opts: { negate?: boolean } = {}): string {

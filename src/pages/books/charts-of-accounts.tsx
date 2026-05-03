@@ -321,8 +321,16 @@ function AccountSidePanel({
     setIsActive(editing?.isActive ?? true);
   }, [editing, open]);
 
-  // Auto-suggest normal balance from type (overridable)
+  // Lock type if editing an account that has children
+  const hasChildren = !!editing && COA_ACCOUNTS.some(a => a.parentCode === editing.code);
+
+  // If a parent is selected, type is inherited (locked)
+  const parentObj = parentCode !== "none" ? COA_ACCOUNTS.find(a => a.code === parentCode) : undefined;
+  const typeLocked = hasChildren || !!parentObj;
+  const effectiveType: AccountType = parentObj ? parentObj.type : type;
+
   function handleTypeChange(t: AccountType) {
+    if (typeLocked) return;
     setType(t);
     if (t === "Liability" || t === "Equity" || t === "Revenue") setNormalBalance("Credit");
     else setNormalBalance("Debit");
@@ -335,7 +343,9 @@ function AccountSidePanel({
   function submit() {
     if (!canSave) return;
     onSave({
-      code, name: name.trim(), type, subType: subType.trim(), normalBalance,
+      code, name: name.trim(),
+      type: effectiveType,
+      subType: subType.trim(), normalBalance,
       parentCode: parentCode === "none" ? undefined : parentCode,
       description: description.trim() || undefined,
       isActive,
@@ -393,15 +403,25 @@ function AccountSidePanel({
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label>Account Type *</Label>
-            <Select value={type} onValueChange={(v) => handleTypeChange(v as AccountType)}>
-              <SelectTrigger className="bg-card"><SelectValue /></SelectTrigger>
+            <Label className="flex items-center gap-1">
+              Account Type *
+              {typeLocked && <span title="Inherited from parent / has children">🔒</span>}
+            </Label>
+            <Select value={effectiveType} onValueChange={(v) => handleTypeChange(v as AccountType)} disabled={typeLocked}>
+              <SelectTrigger className={cn("bg-card", typeLocked && "opacity-60")}>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {TYPE_FILTERS.filter(t => t.value !== "all").map(t => (
                   <SelectItem key={t.value} value={t.value as string}>{t.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {hasChildren && (
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Locked — this account has child accounts that would be affected.
+              </p>
+            )}
           </div>
           <div>
             <Label htmlFor="acct-subtype">Sub-Type *</Label>
@@ -439,11 +459,17 @@ function AccountSidePanel({
             <SelectTrigger className="bg-card"><SelectValue placeholder="None" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">None</SelectItem>
-              {COA_ACCOUNTS.filter(a => isHeaderAccount(a)).map(a => (
-                <SelectItem key={a.code} value={a.code}>{a.code} · {a.name}</SelectItem>
-              ))}
+              {COA_ACCOUNTS
+                .filter(a => isHeaderAccount(a))
+                .filter(a => parentCode !== "none" || type === a.type) // when no parent yet, filter to selected type
+                .map(a => (
+                  <SelectItem key={a.code} value={a.code}>{a.code} · {a.name}</SelectItem>
+                ))}
             </SelectContent>
           </Select>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Account type is inherited from the parent. Sub-accounts cannot change type independently.
+          </p>
         </div>
 
         <div>

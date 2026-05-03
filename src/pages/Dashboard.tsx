@@ -1,3 +1,6 @@
+// TODO: Insert Balance Sheet snapshot card here (Total Assets / Total Liabilities / Total Equity side by side).
+// TODO: Insert Cash Position chip here (closing cash balance from Cash Flow statement).
+// 🔌 BACKEND: Both widgets should source from GET /dashboard/summary which aggregates these figures server-side.
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";

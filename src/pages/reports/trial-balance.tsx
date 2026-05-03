@@ -1,11 +1,17 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, Fragment } from "react";
 import { AppShell } from "@/components/layout/AppShell";
-import { ReportKpi, ReportKpiStrip, PageCard } from "@/components/reports/ReportPrimitives";
+import { ReportKpi, ReportKpiStrip, PageCard, SectionHeading } from "@/components/reports/ReportPrimitives";
+import { BalanceBanner } from "@/components/reports/MissingDataBanner";
 import { YearSelect, PeriodSelect, periodLabel } from "@/components/reports/PeriodFilter";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/shared/SearchInput";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Printer, FileSpreadsheet, ShieldCheck, Scale, Layers } from "lucide-react";
-import { computeTrialBalance } from "@/lib/services/ledger.service";
+import {
+  computeTrialBalance, ACCOUNT_TYPE_ORDER, ACCOUNT_TYPE_LABEL,
+} from "@/lib/services/ledger.service";
+import type { AccountType } from "@/lib/models/ledger";
 import { defaultYear, type Period } from "@/lib/services/tax.service";
 import { formatNGN } from "@/lib/utils/format";
 import { toast } from "sonner";
@@ -15,20 +21,30 @@ export default function TrialBalancePage() {
   const [year, setYear] = useState<number>(defaultYear());
   const [period, setPeriod] = useState<Period>("full");
   const [search, setSearch] = useState("");
+  const [showZero, setShowZero] = useState(false);
 
   // 🔌 BACKEND: Replace with `GET /api/reports/trial-balance?year=&period=`.
   const tb = useMemo(() => computeTrialBalance(year, period), [year, period]);
 
-  const rows = useMemo(() => {
+  const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return tb.rows.filter(r => {
-      if (r.closingDebit === 0 && r.closingCredit === 0 &&
-          r.periodDebit === 0 && r.periodCredit === 0 &&
-          r.openingDebit === 0 && r.openingCredit === 0) return false;
+      const allZero = r.closingDebit === 0 && r.closingCredit === 0 &&
+        r.periodDebit === 0 && r.periodCredit === 0 &&
+        r.openingDebit === 0 && r.openingCredit === 0;
+      if (!showZero && allZero) return false;
       if (!q) return true;
       return r.code.includes(q) || r.accountName.toLowerCase().includes(q);
     });
-  }, [tb, search]);
+  }, [tb, search, showZero]);
+
+  const grouped = useMemo(() => {
+    return ACCOUNT_TYPE_ORDER.map(type => ({
+      type,
+      label: ACCOUNT_TYPE_LABEL[type],
+      rows: filtered.filter(r => r.type === type),
+    })).filter(g => g.rows.length > 0);
+  }, [filtered]);
 
   return (
     <AppShell title="Trial Balance">
@@ -51,8 +67,9 @@ export default function TrialBalancePage() {
         </header>
 
         <ReportKpiStrip>
-          <ReportKpi label="Accounts With Activity" value={rows.length.toString()}
-            hint="Excludes zero-balance accounts" icon={Layers} tone="primary" />
+          <ReportKpi label="Accounts With Activity" value={filtered.length.toString()}
+            hint={showZero ? "All accounts" : "Excludes zero-balance"}
+            icon={Layers} tone="primary" />
           <ReportKpi label="Total Debits" value={formatNGN(tb.totalClosingDebit)}
             hint="Closing Dr position" icon={FileSpreadsheet} tone="skyblue" />
           <ReportKpi label="Total Credits" value={formatNGN(tb.totalClosingCredit)}
@@ -63,9 +80,21 @@ export default function TrialBalancePage() {
             tone={tb.isBalanced ? "success" : "danger"} />
         </ReportKpiStrip>
 
+        <BalanceBanner
+          balanced={tb.isBalanced}
+          imbalance={tb.totalClosingDebit - tb.totalClosingCredit}
+          message={tb.isBalanced ? "Trial Balance is in balance" : "Trial Balance does not balance"}
+        />
+
         <PageCard title="Trial Balance Statement">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex flex-wrap items-center gap-3 mb-3">
             <SearchInput value={search} onChange={setSearch} placeholder="Search account code or name…" />
+            <div className="flex items-center gap-2 ml-auto">
+              <Switch id="tb-zero" checked={showZero} onCheckedChange={setShowZero} />
+              <Label htmlFor="tb-zero" className="text-[12.5px] cursor-pointer">
+                Show zero-balance accounts
+              </Label>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
@@ -88,24 +117,35 @@ export default function TrialBalancePage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.length === 0 && (
+                {grouped.length === 0 && (
                   <tr><td colSpan={8} className="text-center py-8 text-muted-foreground text-sm">No accounts match.</td></tr>
                 )}
-                {rows.map(r => (
-                  <tr key={r.code} className="border-b border-border/50 hover:bg-secondary/30">
-                    <td className="py-1.5 px-3 mono">{r.code}</td>
-                    <td className="py-1.5 px-3">{r.accountName}</td>
-                    <td className="py-1.5 px-3 mono text-right text-muted-foreground">{r.openingDebit > 0 ? formatNGN(r.openingDebit) : "—"}</td>
-                    <td className="py-1.5 px-3 mono text-right text-muted-foreground">{r.openingCredit > 0 ? formatNGN(r.openingCredit) : "—"}</td>
-                    <td className="py-1.5 px-3 mono text-right">{r.periodDebit > 0 ? formatNGN(r.periodDebit) : "—"}</td>
-                    <td className="py-1.5 px-3 mono text-right">{r.periodCredit > 0 ? formatNGN(r.periodCredit) : "—"}</td>
-                    <td className={cn("py-1.5 px-3 mono text-right font-semibold", r.closingDebit > 0 && "text-foreground")}>
-                      {r.closingDebit > 0 ? formatNGN(r.closingDebit) : "—"}
-                    </td>
-                    <td className={cn("py-1.5 px-3 mono text-right font-semibold", r.closingCredit > 0 && "text-success")}>
-                      {r.closingCredit > 0 ? formatNGN(r.closingCredit) : "—"}
-                    </td>
-                  </tr>
+                {grouped.map(group => (
+                  <Fragment key={group.type}>
+                    <tr>
+                      <td colSpan={8} className="pt-4 pb-1 px-3">
+                        <div className="text-[11px] uppercase tracking-wider font-semibold text-primary">
+                          {group.label}
+                        </div>
+                      </td>
+                    </tr>
+                    {group.rows.map(r => (
+                      <tr key={r.code} className="border-b border-border/50 hover:bg-secondary/30">
+                        <td className="py-1.5 px-3 mono">{r.code}</td>
+                        <td className="py-1.5 px-3">{r.accountName}</td>
+                        <td className="py-1.5 px-3 mono text-right text-muted-foreground">{r.openingDebit > 0 ? formatNGN(r.openingDebit) : "—"}</td>
+                        <td className="py-1.5 px-3 mono text-right text-muted-foreground">{r.openingCredit > 0 ? formatNGN(r.openingCredit) : "—"}</td>
+                        <td className="py-1.5 px-3 mono text-right">{r.periodDebit > 0 ? formatNGN(r.periodDebit) : "—"}</td>
+                        <td className="py-1.5 px-3 mono text-right">{r.periodCredit > 0 ? formatNGN(r.periodCredit) : "—"}</td>
+                        <td className={cn("py-1.5 px-3 mono text-right font-semibold", r.closingDebit > 0 && "text-foreground")}>
+                          {r.closingDebit > 0 ? formatNGN(r.closingDebit) : "—"}
+                        </td>
+                        <td className={cn("py-1.5 px-3 mono text-right font-semibold", r.closingCredit > 0 && "text-success")}>
+                          {r.closingCredit > 0 ? formatNGN(r.closingCredit) : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </Fragment>
                 ))}
               </tbody>
               <tfoot>
@@ -121,14 +161,6 @@ export default function TrialBalancePage() {
               </tfoot>
             </table>
           </div>
-
-          {!tb.isBalanced && (
-            <div className="mt-4 p-3 rounded-lg border border-danger/30 bg-danger/5 text-[12.5px] text-danger">
-              <Scale className="inline h-4 w-4 mr-1.5 -mt-0.5" />
-              Trial Balance is out by <span className="mono font-semibold">{formatNGN(Math.abs(tb.totalClosingDebit - tb.totalClosingCredit))}</span>.
-              Investigate journal posting integrity.
-            </div>
-          )}
         </PageCard>
       </div>
     </AppShell>
