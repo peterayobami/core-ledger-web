@@ -45,9 +45,9 @@ export default function Employees() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
         {/* Employee picker — sticky left rail with independent scroll */}
-        <aside className="xl:col-span-3 xl:sticky xl:top-20 xl:self-start data-card overflow-hidden flex flex-col xl:max-h-[calc(100vh-7rem)]">
+        <aside className="md:col-span-3 md:sticky md:top-20 md:self-start data-card overflow-hidden flex flex-col md:max-h-[calc(100vh-7rem)]">
           <div className="border-b border-border p-3 shrink-0">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -59,7 +59,7 @@ export default function Employees() {
               />
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto max-h-[420px] xl:max-h-none">
+          <div className="flex-1 overflow-y-auto max-h-[420px] md:max-h-none">
             {filtered.map((e) => {
               const isSelected = selected.id === e.id;
               const c = e.profile.hasProfile ? computePaye(e.profile) : null;
@@ -98,12 +98,12 @@ export default function Employees() {
         </aside>
 
         {/* Setup form (center, scrolls with page) */}
-        <div className="xl:col-span-6 min-w-0">
+        <div className="md:col-span-6 min-w-0">
           <SetupForm employee={selected} />
         </div>
 
         {/* Live PAYE Preview — sticky right rail */}
-        <div className="xl:col-span-3 xl:sticky xl:top-20 xl:self-start min-w-0">
+        <div className="md:col-span-3 md:sticky md:top-20 md:self-start min-w-0">
           <LivePreview employee={selected} />
         </div>
       </div>
@@ -274,7 +274,7 @@ function LivePreview({ employee }: { employee: Employee }) {
   const profile = employee.profile;
   const computation = useMemo(() => computePaye(profile), [profile]);
   return (
-    <div className="data-card p-5 space-y-3 xl:max-h-[calc(100vh-7rem)] overflow-y-auto">
+    <div className="data-card p-5 space-y-3 md:max-h-[calc(100vh-7rem)] overflow-y-auto">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold">Live PAYE Preview</h3>
