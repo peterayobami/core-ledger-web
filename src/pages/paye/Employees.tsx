@@ -45,10 +45,10 @@ export default function Employees() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Employee picker */}
-        <aside className="lg:col-span-3 data-card overflow-hidden flex flex-col max-h-[760px]">
-          <div className="border-b border-border p-3">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+        {/* Employee picker — sticky left rail with independent scroll */}
+        <aside className="xl:col-span-3 xl:sticky xl:top-20 xl:self-start data-card overflow-hidden flex flex-col xl:max-h-[calc(100vh-7rem)]">
+          <div className="border-b border-border p-3 shrink-0">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
@@ -59,7 +59,7 @@ export default function Employees() {
               />
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto max-h-[420px] xl:max-h-none">
             {filtered.map((e) => {
               const isSelected = selected.id === e.id;
               const c = e.profile.hasProfile ? computePaye(e.profile) : null;
@@ -97,9 +97,14 @@ export default function Employees() {
           </div>
         </aside>
 
-        {/* Setup form + live preview */}
-        <div className="lg:col-span-9">
+        {/* Setup form (center, scrolls with page) */}
+        <div className="xl:col-span-6 min-w-0">
           <SetupForm employee={selected} />
+        </div>
+
+        {/* Live PAYE Preview — sticky right rail */}
+        <div className="xl:col-span-3 xl:sticky xl:top-20 xl:self-start min-w-0">
+          <LivePreview employee={selected} />
         </div>
       </div>
     </PAYELayout>
