@@ -45,10 +45,10 @@ export default function Employees() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Employee picker */}
-        <aside className="lg:col-span-3 data-card overflow-hidden flex flex-col max-h-[760px]">
-          <div className="border-b border-border p-3">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+        {/* Employee picker — sticky left rail with independent scroll */}
+        <aside className="xl:col-span-3 xl:sticky xl:top-20 xl:self-start data-card overflow-hidden flex flex-col xl:max-h-[calc(100vh-7rem)]">
+          <div className="border-b border-border p-3 shrink-0">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
@@ -59,7 +59,7 @@ export default function Employees() {
               />
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto max-h-[420px] xl:max-h-none">
             {filtered.map((e) => {
               const isSelected = selected.id === e.id;
               const c = e.profile.hasProfile ? computePaye(e.profile) : null;
@@ -97,9 +97,14 @@ export default function Employees() {
           </div>
         </aside>
 
-        {/* Setup form + live preview */}
-        <div className="lg:col-span-9">
+        {/* Setup form (center, scrolls with page) */}
+        <div className="xl:col-span-6 min-w-0">
           <SetupForm employee={selected} />
+        </div>
+
+        {/* Live PAYE Preview — sticky right rail */}
+        <div className="xl:col-span-3 xl:sticky xl:top-20 xl:self-start min-w-0">
+          <LivePreview employee={selected} />
         </div>
       </div>
     </PAYELayout>
@@ -138,169 +143,170 @@ function SetupForm({ employee }: { employee: Employee }) {
     ? Math.min(profile.rentPaid * 0.20, 500_000) : 0;
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
-      <div className="xl:col-span-3 space-y-4">
-        {/* Income Structure */}
-        <section className="data-card p-5 space-y-3">
-          <div>
-            <h3 className="text-sm font-semibold">Income Structure</h3>
-            <p className="text-[11px] text-muted-foreground">Monthly emoluments breakdown</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label="Basic Salary (Pensionable)" value={monthly(profile.basic)} onChange={setMonthly("basic")} />
-            <Field label="Housing Allowance (Pensionable)" value={monthly(profile.housing)} onChange={setMonthly("housing")} />
-            <Field label="Transport Allowance (Pensionable)" value={monthly(profile.transport)} onChange={setMonthly("transport")} />
-            <Field label="Other Allowances" value={monthly(profile.other)} onChange={setMonthly("other")} />
-          </div>
-          <div className="rounded-md bg-accent-soft border border-accent/20 px-3 py-2 text-[11px] text-accent font-medium flex items-center gap-2">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Pensionable emoluments: {formatNGN(pensionableAnnual)} / year
-          </div>
-        </section>
+    <div className="space-y-4">
+      {/* Income Structure */}
+      <section className="data-card p-5 space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold">Income Structure</h3>
+          <p className="text-[11px] text-muted-foreground">Monthly emoluments breakdown</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Field label="Basic Salary (Pensionable)" value={monthly(profile.basic)} onChange={setMonthly("basic")} />
+          <Field label="Housing Allowance (Pensionable)" value={monthly(profile.housing)} onChange={setMonthly("housing")} />
+          <Field label="Transport Allowance (Pensionable)" value={monthly(profile.transport)} onChange={setMonthly("transport")} />
+          <Field label="Other Allowances" value={monthly(profile.other)} onChange={setMonthly("other")} />
+        </div>
+        <div className="rounded-md bg-accent-soft border border-accent/20 px-3 py-2 text-[11px] text-accent font-medium flex items-center gap-2">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          Pensionable emoluments: {formatNGN(pensionableAnnual)} / year
+        </div>
+      </section>
 
-        {/* Statutory Deductions */}
-        <section className="data-card p-5 space-y-3">
-          <div>
-            <h3 className="text-sm font-semibold">Statutory Deductions</h3>
-            <p className="text-[11px] text-muted-foreground">Mandatory NTA 2025 deductions</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <ReadOnly label="Pension (8% of Pensionable)" value={formatNGN(pensionMonthly)} />
-            <ReadOnly label="NHF (2.5% of Basic)" value={formatNGN(nhfMonthly)} />
-          </div>
-        </section>
+      {/* Statutory Deductions */}
+      <section className="data-card p-5 space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold">Statutory Deductions</h3>
+          <p className="text-[11px] text-muted-foreground">Mandatory NTA 2025 deductions</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <ReadOnly label="Pension (8% of Pensionable)" value={formatNGN(pensionMonthly)} />
+          <ReadOnly label="NHF (2.5% of Basic)" value={formatNGN(nhfMonthly)} />
+        </div>
+      </section>
 
-        {/* Rent Relief */}
-        <section className="data-card p-5 space-y-3">
+      {/* Rent Relief */}
+      <section className="data-card p-5 space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold">Rent Relief Module</h3>
+          <p className="text-[11px] text-muted-foreground">NTA 2025 rent relief calculation</p>
+        </div>
+        <div className="flex items-center justify-between rounded-md border border-border p-3">
           <div>
-            <h3 className="text-sm font-semibold">Rent Relief Module</h3>
-            <p className="text-[11px] text-muted-foreground">NTA 2025 rent relief calculation</p>
+            <div className="text-xs font-medium">Employee pays rent</div>
+            <div className="text-[11px] text-muted-foreground">Toggle to enable rent relief</div>
           </div>
-          <div className="flex items-center justify-between rounded-md border border-border p-3">
+          <Switch
+            checked={profile.rentReliefApproved}
+            onCheckedChange={(v) => setProfile(p => ({ ...p, rentReliefApproved: v, hasProfile: true }))}
+          />
+        </div>
+        {profile.rentReliefApproved && (
+          <>
+            <Field
+              label="Annual Rent Paid"
+              value={profile.rentPaid}
+              onChange={(v) => setProfile(p => ({ ...p, rentPaid: v, hasProfile: true }))}
+            />
             <div>
-              <div className="text-xs font-medium">Employee pays rent</div>
-              <div className="text-[11px] text-muted-foreground">Toggle to enable rent relief</div>
+              <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Rent Receipt Document</Label>
+              <div className="mt-1.5 rounded-md border border-dashed border-border p-6 text-center cursor-pointer hover:bg-secondary/30 transition-colors">
+                <Upload className="h-5 w-5 text-muted-foreground mx-auto mb-1.5" />
+                <div className="text-xs font-medium">Click to upload rent receipt</div>
+                <div className="text-[11px] text-muted-foreground">PDF, JPG, PNG up to 5MB</div>
+              </div>
             </div>
-            <Switch
-              checked={profile.rentReliefApproved}
-              onCheckedChange={(v) => setProfile(p => ({ ...p, rentReliefApproved: v, hasProfile: true }))}
+            <div className="rounded-md bg-accent-soft border border-accent/20 px-3 py-2 text-[11px] text-accent font-medium space-y-0.5">
+              <div>Deductible Rent Relief: {formatNGN(rentReliefAnnual)}</div>
+              <div className="text-accent/80 font-normal">
+                = min(20% × {formatNGNCompact(profile.rentPaid)}, ₦500,000 cap)
+              </div>
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* Residency */}
+      <section className="data-card p-5 space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold">Residency &amp; Other Details</h3>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Tax Residency Status</Label>
+            <Select
+              value={profile.residency}
+              onValueChange={(v: "Resident" | "Non-Resident") => setProfile(p => ({ ...p, residency: v, hasProfile: true }))}
+            >
+              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Resident">Resident (Worldwide Income)</SelectItem>
+                <SelectItem value="Non-Resident">Non-Resident (Nigeria-source only)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">State of Residence (for remittance routing)</Label>
+            <Select
+              value={profile.state}
+              onValueChange={(v) => setProfile(p => ({ ...p, state: v, hasProfile: true }))}
+            >
+              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">TIN</Label>
+            <Input
+              value={profile.tin ?? ""}
+              onChange={(e) => setProfile(p => ({ ...p, tin: e.target.value || null, hasProfile: true }))}
+              placeholder="10 digits"
+              className="h-9 font-mono text-sm"
             />
           </div>
-          {profile.rentReliefApproved && (
-            <>
-              <Field
-                label="Annual Rent Paid"
-                value={profile.rentPaid}
-                onChange={(v) => setProfile(p => ({ ...p, rentPaid: v, hasProfile: true }))}
-              />
-              <div>
-                <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Rent Receipt Document</Label>
-                <div className="mt-1.5 rounded-md border border-dashed border-border p-6 text-center cursor-pointer hover:bg-secondary/30 transition-colors">
-                  <Upload className="h-5 w-5 text-muted-foreground mx-auto mb-1.5" />
-                  <div className="text-xs font-medium">Click to upload rent receipt</div>
-                  <div className="text-[11px] text-muted-foreground">PDF, JPG, PNG up to 5MB</div>
-                </div>
-              </div>
-              <div className="rounded-md bg-accent-soft border border-accent/20 px-3 py-2 text-[11px] text-accent font-medium space-y-0.5">
-                <div>Deductible Rent Relief: {formatNGN(rentReliefAnnual)}</div>
-                <div className="text-accent/80 font-normal">
-                  = min(20% × {formatNGNCompact(profile.rentPaid)}, ₦500,000 cap)
-                </div>
-              </div>
-            </>
-          )}
-        </section>
-
-        {/* Residency */}
-        <section className="data-card p-5 space-y-3">
-          <div>
-            <h3 className="text-sm font-semibold">Residency &amp; Other Details</h3>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Tax Residency Status</Label>
-              <Select
-                value={profile.residency}
-                onValueChange={(v: "Resident" | "Non-Resident") => setProfile(p => ({ ...p, residency: v, hasProfile: true }))}
-              >
-                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Resident">Resident (Worldwide Income)</SelectItem>
-                  <SelectItem value="Non-Resident">Non-Resident (Nigeria-source only)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">State of Residence (for remittance routing)</Label>
-              <Select
-                value={profile.state}
-                onValueChange={(v) => setProfile(p => ({ ...p, state: v, hasProfile: true }))}
-              >
-                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">TIN</Label>
-              <Input
-                value={profile.tin ?? ""}
-                onChange={(e) => setProfile(p => ({ ...p, tin: e.target.value || null, hasProfile: true }))}
-                placeholder="10 digits"
-                className="h-9 font-mono text-sm"
-              />
-            </div>
-          </div>
-        </section>
-
-        <div className="flex items-center gap-2 justify-end">
-          <Button variant="outline" size="sm" onClick={() => setProfile(employee.profile)}>
-            <RotateCcw className="h-3.5 w-3.5 mr-2" /> Reset to Defaults
-          </Button>
-          <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <Save className="h-3.5 w-3.5 mr-2" /> Save Configuration
-          </Button>
         </div>
+      </section>
+
+      <div className="flex items-center gap-2 justify-end">
+        <Button variant="outline" size="sm" onClick={() => setProfile(employee.profile)}>
+          <RotateCcw className="h-3.5 w-3.5 mr-2" /> Reset to Defaults
+        </Button>
+        <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+          <Save className="h-3.5 w-3.5 mr-2" /> Save Configuration
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function LivePreview({ employee }: { employee: Employee }) {
+  const profile = employee.profile;
+  const computation = useMemo(() => computePaye(profile), [profile]);
+  return (
+    <div className="data-card p-5 space-y-3 xl:max-h-[calc(100vh-7rem)] overflow-y-auto">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold">Live PAYE Preview</h3>
+          <p className="text-[11px] text-muted-foreground">Real-time computation</p>
+        </div>
+        <BandChip rate={computation.isExempt ? 0 : computation.highestBand} />
       </div>
 
-      {/* Live PAYE Preview */}
-      <div className="xl:col-span-2">
-        <div className="data-card p-5 sticky top-20 space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-semibold">Live PAYE Preview</h3>
-              <p className="text-[11px] text-muted-foreground">Real-time computation</p>
-            </div>
-            <BandChip rate={computation.isExempt ? 0 : computation.highestBand} />
-          </div>
-
-          <Row label="Gross Annual Income" value={formatNGN(computation.grossAnnual)} />
-          <Row label="Less: Pension (8%)" value={`-${formatNGN(computation.pension)}`} dim />
-          <Row label="Less: NHF (2.5%)" value={`-${formatNGN(computation.nhf)}`} dim />
-          {computation.rentRelief > 0 && (
-            <Row label="Less: Rent Relief" value={`-${formatNGN(computation.rentRelief)}`} dim />
-          )}
-          <div className="border-t border-border pt-2">
-            <Row label="Chargeable Income" value={formatNGN(computation.chargeableAnnual)} bold />
-          </div>
-
-          <div className="rounded-md bg-accent-soft border border-accent/20 p-3 space-y-1">
-            <div className="text-[10px] uppercase tracking-wider text-accent font-semibold">PAYE Computation</div>
-            <Row label="Tax Band" value={`${computation.isExempt ? 0 : computation.highestBand}%`} />
-            <Row label="Annual PAYE" value={formatNGN(computation.annualPaye)} bold />
-            <Row label="Monthly PAYE" value={formatNGN(computation.monthlyPaye)} bold />
-            <Row label="Effective Tax Rate" value={formatPct(computation.etr)} />
-          </div>
-
-          {!profile.tin && (
-            <div className="rounded-md bg-warning-soft border border-warning/30 p-2.5 text-[11px] text-warning flex items-start gap-1.5">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-              <span>Missing TIN — required before this profile can be included in Form H1.</span>
-            </div>
-          )}
-        </div>
+      <Row label="Gross Annual Income" value={formatNGN(computation.grossAnnual)} />
+      <Row label="Less: Pension (8%)" value={`-${formatNGN(computation.pension)}`} dim />
+      <Row label="Less: NHF (2.5%)" value={`-${formatNGN(computation.nhf)}`} dim />
+      {computation.rentRelief > 0 && (
+        <Row label="Less: Rent Relief" value={`-${formatNGN(computation.rentRelief)}`} dim />
+      )}
+      <div className="border-t border-border pt-2">
+        <Row label="Chargeable Income" value={formatNGN(computation.chargeableAnnual)} bold />
       </div>
+
+      <div className="rounded-md bg-accent-soft border border-accent/20 p-3 space-y-1">
+        <div className="text-[10px] uppercase tracking-wider text-accent font-semibold">PAYE Computation</div>
+        <Row label="Tax Band" value={`${computation.isExempt ? 0 : computation.highestBand}%`} />
+        <Row label="Annual PAYE" value={formatNGN(computation.annualPaye)} bold />
+        <Row label="Monthly PAYE" value={formatNGN(computation.monthlyPaye)} bold />
+        <Row label="Effective Tax Rate" value={formatPct(computation.etr)} />
+      </div>
+
+      {!profile.tin && (
+        <div className="rounded-md bg-warning-soft border border-warning/30 p-2.5 text-[11px] text-warning flex items-start gap-1.5">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+          <span>Missing TIN — required before this profile can be included in Form H1.</span>
+        </div>
+      )}
     </div>
   );
 }
