@@ -44,7 +44,7 @@ export default function EmployeeDetailPage() {
                                 Configure this employee's PAYE income structure, statutory deductions and rent relief in the Payroll module under <span className="text-primary">Taxation → Payroll → Employee Setup</span>.
                             </p>
                             <div className="mt-4">
-                                <Link href="/taxation/paye/employees">
+                                <Link href={`/taxation/paye/employees?id=${employee.id}`}>
                                     <Button variant="outline">Open Employee Setup</Button>
                                 </Link>
                             </div>
@@ -86,7 +86,7 @@ export default function EmployeeDetailPage() {
                             <Button className="w-full bg-primary text-primary-foreground hover:bg-primary-deep" onClick={() => setEditOpen(true)}>
                                 Edit Employee
                             </Button>
-                            <Link href="/taxation/paye/employees" className="block">
+                            <Link href={`/taxation/paye/employees?id=${employee.id}`} className="block">
                                 <Button variant="outline" className="w-full mt-2">Configure Payroll</Button>
                             </Link>
                         </ClCard>

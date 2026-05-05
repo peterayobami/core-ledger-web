@@ -1,4 +1,5 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { useRouter } from "next/router";
 import { PAYELayout } from "@/components/paye/PAYELayout";
 import { BandChip } from "@/components/paye/RunStatusBadge";
 import { Button } from "@/components/ui/button";
@@ -24,20 +25,24 @@ import { cn } from "@/lib/utils";
 const STATES = ["Lagos", "FCT Abuja", "Rivers", "Oyo", "Kano", "Kaduna", "Akwa Ibom", "Enugu", "Anambra", "Delta"];
 
 export default function Employees() {
+  const { query } = useRouter();
   const { data: employees = [] } = usePayeEmployees();
   const saveProfile = useSavePayeProfile();
 
   const [selected, setSelected] = useState<Employee | null>(null);
   const [profile, setProfile] = useState<PayeProfile | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const initialised = useRef(false);
 
-  // Auto-select first employee once data loads
+  // Select the employee from the URL ?id= param on first load, falling back to the first employee
   useEffect(() => {
-    if (!selected && employees.length > 0) {
-      setSelected(employees[0]);
-      setProfile(employees[0].profile);
-    }
-  }, [employees]);
+    if (initialised.current || employees.length === 0) return;
+    const targetId = query.id as string | undefined;
+    const target = (targetId ? employees.find(e => e.id === targetId) : null) ?? employees[0];
+    setSelected(target);
+    setProfile(target.profile);
+    initialised.current = true;
+  }, [employees, query.id]);
 
   // Reset form when employee changes
   useEffect(() => {
