@@ -11,10 +11,9 @@ import {
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
-import {
-  EMPLOYEES, CURRENT_PERIOD, periodLong,
-} from "@/lib/mock-data/paye";
+import { CURRENT_PERIOD, periodLong } from "@/lib/mock-data/paye";
 import { computePaye, formatNGN, formatNGNCompact, formatPct } from "@/lib/services/paye.service";
+import { usePayeEmployees, useSavePayeProfile } from "@/hooks/paye/use-employees";
 import type { Employee, PayeProfile } from "@/lib/models/paye";
 import {
   Search, ShieldCheck, Upload, RotateCcw, Save, ChevronRight,
@@ -25,15 +24,32 @@ import { cn } from "@/lib/utils";
 const STATES = ["Lagos", "FCT Abuja", "Rivers", "Oyo", "Kano", "Kaduna", "Akwa Ibom", "Enugu", "Anambra", "Delta"];
 
 export default function Employees() {
-  const [selected, setSelected] = useState<Employee>(EMPLOYEES[0]);
-  const [profile, setProfile] = useState<PayeProfile>(EMPLOYEES[0].profile);
+  const { data: employees = [] } = usePayeEmployees();
+  const saveProfile = useSavePayeProfile();
+
+  const [selected, setSelected] = useState<Employee | null>(null);
+  const [profile, setProfile] = useState<PayeProfile | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
 
+  // Auto-select first employee once data loads
   useEffect(() => {
-    setProfile(selected.profile);
-  }, [selected.id]);
+    if (!selected && employees.length > 0) {
+      setSelected(employees[0]);
+      setProfile(employees[0].profile);
+    }
+  }, [employees]);
 
-  const computation = useMemo(() => computePaye(profile), [profile]);
+  // Reset form when employee changes
+  useEffect(() => {
+    if (selected) setProfile(selected.profile);
+  }, [selected?.id]);
+
+  const computation = useMemo(
+    () => profile ? computePaye(profile) : null,
+    [profile],
+  );
+
+  if (!selected || !profile || !computation) return null;
 
   return (
     <PAYELayout breadcrumbs={["Taxation", "PAYE", "Employee Setup"]}>
@@ -71,7 +87,13 @@ export default function Employees() {
             </div>
           </div>
 
-          <SetupForm employee={selected} profile={profile} setProfile={setProfile} />
+          <SetupForm
+            employee={selected}
+            profile={profile}
+            setProfile={setProfile}
+            onSave={() => saveProfile.mutate({ id: selected.id, profile })}
+            isSaving={saveProfile.isPending}
+          />
         </div>
 
         {/* Live PAYE Preview — sticky right */}
@@ -121,6 +143,7 @@ export default function Employees() {
             <SheetTitle className="text-sm">Select Employee</SheetTitle>
           </SheetHeader>
           <EmployeePicker
+            employees={employees}
             selected={selected}
             onSelect={(e) => { setSelected(e); setPickerOpen(false); }}
           />
@@ -131,22 +154,23 @@ export default function Employees() {
 }
 
 function EmployeePicker({
-  selected, onSelect,
+  employees, selected, onSelect,
 }: {
-  selected: Employee;
+  employees: Employee[];
+  selected: Employee | null;
   onSelect: (e: Employee) => void;
 }) {
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
-    if (!search) return EMPLOYEES;
+    if (!search) return employees;
     const s = search.toLowerCase();
-    return EMPLOYEES.filter(e =>
+    return employees.filter(e =>
       e.name.toLowerCase().includes(s) ||
       e.department.toLowerCase().includes(s) ||
       e.id.toLowerCase().includes(s),
     );
-  }, [search]);
+  }, [search, employees]);
 
   return (
     <>
@@ -164,7 +188,7 @@ function EmployeePicker({
       </div>
       <div className="flex-1 overflow-y-auto">
         {filtered.map((e) => {
-          const isSelected = selected.id === e.id;
+          const isSelected = selected?.id === e.id;
           const c = e.profile.hasProfile ? computePaye(e.profile) : null;
           return (
             <button
@@ -211,11 +235,13 @@ function PeriodHeader() {
 }
 
 function SetupForm({
-  employee, profile, setProfile,
+  employee, profile, setProfile, onSave, isSaving,
 }: {
   employee: Employee;
   profile: PayeProfile;
   setProfile: React.Dispatch<React.SetStateAction<PayeProfile>>;
+  onSave: () => void;
+  isSaving: boolean;
 }) {
   const monthly = (n: number) => Math.round(n / 12);
   const setMonthly = <K extends keyof PayeProfile>(key: K) => (v: number) => {
@@ -345,11 +371,17 @@ function SetupForm({
       </section>
 
       <div className="flex items-center gap-2 justify-end">
-        <Button variant="outline" size="sm" onClick={() => setProfile(employee.profile)}>
+        <Button variant="outline" size="sm" onClick={() => setProfile(employee.profile)} disabled={isSaving}>
           <RotateCcw className="h-3.5 w-3.5 mr-2" /> Reset to Defaults
         </Button>
-        <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-          <Save className="h-3.5 w-3.5 mr-2" /> Save Configuration
+        <Button
+          size="sm"
+          className="bg-accent text-accent-foreground hover:bg-accent/90"
+          onClick={onSave}
+          disabled={isSaving}
+        >
+          <Save className="h-3.5 w-3.5 mr-2" />
+          {isSaving ? "Saving…" : "Save Configuration"}
         </Button>
       </div>
     </div>

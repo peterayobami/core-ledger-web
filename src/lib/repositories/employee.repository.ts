@@ -1,5 +1,6 @@
 import { HR_EMPLOYEES } from "@/lib/mock-data/employee";
 import type { HrEmployee } from "@/lib/models/employee";
+import type { PayeProfile } from "@/lib/models/paye";
 
 let store: HrEmployee[] = [...HR_EMPLOYEES];
 
@@ -15,6 +16,10 @@ export const employeeRepository = {
     },
     update: (id: string, data: Partial<HrEmployee>): HrEmployee | undefined => {
         store = store.map(e => e.id === id ? { ...e, ...data } : e);
+        return store.find(e => e.id === id);
+    },
+    savePayeProfile: (id: string, payeProfile: PayeProfile): HrEmployee | undefined => {
+        store = store.map(e => e.id === id ? { ...e, payeProfile } : e);
         return store.find(e => e.id === id);
     },
 };
