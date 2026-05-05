@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 const STATES = ["Lagos", "FCT Abuja", "Rivers", "Oyo", "Kano", "Kaduna", "Akwa Ibom", "Enugu", "Anambra", "Delta"];
 
 export default function Employees() {
-  const { query } = useRouter();
+  const { query, isReady } = useRouter();
   const { data: employees = [] } = usePayeEmployees();
   const saveProfile = useSavePayeProfile();
 
@@ -34,15 +34,16 @@ export default function Employees() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const initialised = useRef(false);
 
-  // Select the employee from the URL ?id= param on first load, falling back to the first employee
+  // Wait for both the router query and employee list to be ready before selecting.
+  // In Next.js, query is empty on the first render; isReady signals that params are parsed.
   useEffect(() => {
-    if (initialised.current || employees.length === 0) return;
+    if (initialised.current || !isReady || employees.length === 0) return;
     const targetId = query.id as string | undefined;
     const target = (targetId ? employees.find(e => e.id === targetId) : null) ?? employees[0];
     setSelected(target);
     setProfile(target.profile);
     initialised.current = true;
-  }, [employees, query.id]);
+  }, [isReady, employees, query.id]);
 
   // Reset form when employee changes
   useEffect(() => {
